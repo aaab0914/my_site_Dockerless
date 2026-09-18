@@ -7,16 +7,13 @@ import os
 # os: Operating system interface module for reading environment variables
 
 from pathlib import Path
+# from django.conf.
 # Path: Object-oriented filesystem paths
 
 from decouple import Csv, config
 # config: Function for reading environment variables from .env file
 # Csv: Helper for parsing comma-separated values from environment variables
 
-from logging.handlers import RotatingFileHandler
-# RotatingFileHandler: Log handler that rotates log files when they reach a certain size
-
-from logging.handlers import TimedRotatingFileHandler
 # ========================================
 # Build paths inside the project
 # ========================================
@@ -53,7 +50,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django.contrib.sites',
     'django.contrib.sitemaps',
-    'django.contrib.postgres',
+
+    'django_extensions',
+    'rest_framework',  # 添加这一行
+    'django_filters',  # 如果您已经添加了
+    'rest_framework.authtoken',
 
     'blog.apps.BlogConfig',
     'images.apps.ImagesConfig',
@@ -64,6 +65,16 @@ INSTALLED_APPS = [
     'markdownx',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -72,6 +83,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+    'my_site.middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = "my_site.urls"
@@ -100,12 +113,8 @@ WSGI_APPLICATION = "my_site.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'blog'),
-        'USER': os.environ.get('DB_USER', 'blog'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'StrongPass123!'),
-        'HOST': os.environ.get('DB_HOST', 'db' if os.environ.get('RUNNING_IN_DOCKER') else 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -169,11 +178,10 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            # A plain FileHandler avoids Windows file-lock conflicts when
+            # Django's autoreloader starts more than one development process.
+            'class': 'logging.FileHandler',
             'filename': LOGS_DIR / 'access.log',
-            'when': 'midnight',
-            'interval': 1,
-            'backupCount': 30,
             'encoding': 'utf-8',
         },
     },
@@ -197,3 +205,11 @@ LOGGING = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# settings.py
+# 允许上传更大的文件（例如 10MB）
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# settings.py
+LOGIN_URL = '/users/login/'
+

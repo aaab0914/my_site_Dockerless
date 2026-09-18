@@ -106,13 +106,13 @@ class BlogConfig(AppConfig):
 
             # Connection successful - log success message
             # f"{self.name}" is 'blog' (the application name)
-            print(f"✅ {self.name} 数据库连接正常")
+            print(f"[OK] {self.name} 数据库连接正常")
 
         except Exception as e:
             # Connection failed - log warning but don't crash
             # This allows the app to start even if database is temporarily unavailable
             # (e.g., during Docker container startup where DB may not be ready yet)
-            print(f"⚠️ {self.name} 数据库连接异常: {e}")
+            print(f"[WARNING] {self.name} 数据库连接异常: {e}")
 
         # ----- SIGNAL REGISTRATION -----
         # Attempts to import the signals module to register signal handlers
@@ -125,7 +125,7 @@ class BlogConfig(AppConfig):
             from . import signals
 
             # Signal registration successful
-            print(f"✅ {self.name} 信号已注册")
+            print(f"[OK] {self.name} 信号已注册")
 
         except ImportError:
             # No signals.py file exists - skip signal registration

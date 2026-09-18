@@ -102,6 +102,7 @@ class Post(models.Model):
     # ----- BASIC FIELDS -----
 
     title = models.CharField(max_length=250)
+    cover_image = models.ImageField(upload_to='posts/%Y/%m/%d/', blank=True, null=True)
     # CharField: Stores the post title with maximum length of 250 characters
     # Used in __str__ representation, URL slugs, and display headings
 
@@ -193,6 +194,13 @@ class Post(models.Model):
             # Improves performance for list pages that sort by publish date
         ]
 
+        constraints = [
+            models.UniqueConstraint(
+                fields=['slug', 'publish'],
+                name='unique_slug_per_date'
+            )
+        ]
+
     # ----- MAGIC METHODS -----
 
     def __str__(self):
@@ -234,6 +242,7 @@ class Post(models.Model):
             ]
         )
 
+
     # ----- MODEL BEHAVIOR -----
 
     def save(self, *args, **kwargs):
@@ -250,6 +259,7 @@ class Post(models.Model):
         """
         if not self.slug:
             self.slug = slugify(self.title)
+        self.clean()
         super().save(*args, **kwargs)
 
     # ----- MARKDOWN RENDERING -----
@@ -314,11 +324,12 @@ class Comment(models.Model):
 
     # ----- COMMENT CONTENT -----
 
-    body = models.TextField()
+    body = models.TextField(max_length=200)
     # TextField: The actual comment text (no length limit)
     # Can contain HTML? Consider escaping for security
 
     # ----- DATE/TIME FIELDS -----
+    image = models.ImageField(upload_to='comments/%Y/%m/%d/', blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
     # DateTimeField: When comment was first posted

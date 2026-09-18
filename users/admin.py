@@ -1,43 +1,20 @@
-# users/admin.py
-# ========================================
-# Imports
-# ========================================
-
 from django.contrib import admin
-# admin: Django's built-in administration interface module
 
-from django.contrib.auth.admin import UserAdmin
-# UserAdmin: The default admin configuration for the User model
+from .models import Profile, UserActivity, UserPreference
 
-from django.contrib.auth.models import User
-# User: The built-in user model
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'bio', 'location', 'birth_date']
+    search_fields = ['user__username']
 
-from .models import Profile
-# Profile: The user profile model (extends the built-in User model)
+@admin.register(UserActivity)
+class UserActivityAdmin(admin.ModelAdmin):
+    list_display = ['user', 'action', 'ip_address', 'timestamp']
+    list_filter = ['action', 'timestamp']
+    search_fields = ['user__username', 'action']
 
-
-# ========================================
-# Admin Configuration
-# ========================================
-
-class ProfileInline(admin.StackedInline):
-    """
-    Inline admin configuration for the Profile model.
-    Displays the Profile fields inside the User admin page.
-    """
-    model = Profile
-    can_delete = False
-    verbose_name_plural = 'Profile'
-
-
-class CustomUserAdmin(UserAdmin):
-    """
-    Custom admin configuration for the User model.
-    Includes the Profile inline.
-    """
-    inlines = [ProfileInline]
-
-
-# Unregister the default User admin and register the custom one
-admin.site.unregister(User)
-admin.site.register(User, CustomUserAdmin)
+@admin.register(UserPreference)
+class UserPreferenceAdmin(admin.ModelAdmin):
+    list_display = ['user', 'theme', 'email_notifications', 'push_notifications']
+    list_filter = ['theme', 'email_notifications']
+    search_fields = ['user__username']

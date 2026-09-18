@@ -6,10 +6,8 @@
 from django import forms
 # forms: Django's form handling module for creating and validating forms
 
-from .models import Comment
+from .models import Post, Comment
 # Comment: The comment model (imported from the current app)
-
-from .models import Post
 # Post: The main blog post model (imported from the current app)
 
 
@@ -36,7 +34,12 @@ class CommentForm(forms.ModelForm):
     """
     class Meta:
         model = Comment
-        fields = ['name', 'body']
+        fields = ['body', 'image']
+        widgets = {
+            # 'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+        }
 
 
 class SearchForm(forms.Form):
@@ -52,9 +55,10 @@ class PostCreateForm(forms.ModelForm):
     """
     class Meta:
         model = Post
-        fields = ['title', 'body', 'tags']
+        fields = ['title', 'body', 'tags', 'cover_image']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
             'tags': forms.TextInput(attrs={'class': 'form-control'}),
+            'cover_image': forms.FileInput(attrs={'class': 'form-control'}),
         }

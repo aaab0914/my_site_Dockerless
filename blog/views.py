@@ -19,6 +19,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.views.generic import ListView
 # ListView: Class-based view for displaying a list of objects
+from django.contrib import messages
 
 # from django.conf import settings
 # from django.contrib.redirects.models import Redirect
@@ -42,11 +43,6 @@ from .forms import EmailPostForm, CommentForm, SearchForm, PostCreateForm
 # SearchForm: Form for searching posts by keyword
 # PostCreateForm: Form for creating a new post
 
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity
-# SearchVector: Represents a searchable document composed of fields (e.g., title + body)
-# SearchQuery: Represents a search query expression (e.g., 'django')
-# SearchRank: Calculates a rank for search results based on relevance
-# TrigramSimilarity: PostgreSQL trigram similarity function for fuzzy text matching
 
 from django.db.models import Q
 # Q: Used to build complex queries with OR, AND, and NOT conditions
@@ -58,7 +54,7 @@ from django.utils.text import slugify
 from django.urls import reverse_lazy
 from django.views.generic.edit import DeleteView
 
-
+# from django.contrib.auth.decorators import login_required
 # slugify: Converts a string into a URL-friendly slug
 
 
@@ -66,33 +62,33 @@ from django.views.generic.edit import DeleteView
 # 类视图
 # ========================================
 
-class PostListView(ListView):
-    """
-    Class-based view for listing posts (alternative implementation to function-based post_list).
-
-    This view automatically:
-    - Queries Post.published.all() (only published posts)
-    - Paginates results (10 posts per page)
-    - Passes 'posts' as context variable to template
-    - Uses 'blog/post/list.html' template
-
-    URL pattern example: path('', PostListView.as_view(), name='post_list')
-    """
-
-    # QuerySet to retrieve only published posts (using custom manager)
-    # Post.published is a custom manager that filters status=PUBLISHED
-    queryset = Post.published.all()
-
-    # Name of the context variable available in the template
-    # Template will use {% for post in posts %} instead of {% for post in object_list %}
-    context_object_name = 'posts'
-
-    # Number of posts to display per page
-    # Creates pagination with 10 posts on each page
-    paginate_by = 10
-
-    # Template file used to render the list of posts
-    template_name = 'blog/post/list.html'
+# class PostListView(ListView):
+#     """
+#     Class-based view for listing posts (alternative implementation to function-based post_list).
+#
+#     This view automatically:
+#     - Queries Post.published.all() (only published posts)
+#     - Paginates results (10 posts per page)
+#     - Passes 'posts' as context variable to template
+#     - Uses 'blog/post/all_posts_list.html' template
+#
+#     URL pattern example: path('', PostListView.as_view(), name='post_list')
+#     """
+#
+#     # QuerySet to retrieve only published posts (using custom manager)
+#     # Post.published is a custom manager that filters status=PUBLISHED
+#     queryset = Post.published.all()
+#
+#     # Name of the context variable available in the template
+#     # Template will use {% for post in posts %} instead of {% for post in object_list %}
+#     context_object_name = 'posts'
+#
+#     # Number of posts to display per page
+#     # Creates pagination with 10 posts on each page
+#     paginate_by = 10
+#
+#     # Template file used to render the list of posts
+#     template_name = 'blog/post/all_posts_list.html'
 
 
 # ========================================
@@ -202,7 +198,7 @@ def post_list(request, tag_slug=None):
     # Render the template with posts and tag (None if no tag filtering)
     return render(
         request,
-        'blog/post/list.html',
+        'blog/post/all_posts_list.html',
         {'posts': posts, 'tag': tag if tag_slug else None}
     )
 
@@ -282,7 +278,7 @@ def post_detail(request, year, month, day, post_slug):
     # Render the detail template with all context data
     return render(
         request,
-        'blog/post/detail.html',
+        'blog/post/post_detail.html',
         {
             'post': post,
             'comments': comments,
@@ -290,55 +286,6 @@ def post_detail(request, year, month, day, post_slug):
             'similar_posts': similar_posts
         }
     )
-
-
-@require_POST
-def post_comment(request, post_id):
-    """
-    View function for handling comment submission (POST only).
-
-    This view:
-    - Accepts only POST requests (decorated with @require_POST)
-    - Creates a new comment for the specified post
-    - Associates the comment with the post (foreign key)
-    - Comments are created with active=False by default (requires moderation)
-
-    :param request: HTTP request object (must be POST)
-    :param post_id: Primary key of the post to comment on
-    :return: Rendered comment template with post, form, and new comment
-    """
-
-    # Retrieve the published post by ID
-    post = get_object_or_404(
-        Post,
-        id=post_id,
-        status=Post.Status.PUBLISHED
-    )
-
-    # Initialize comment variable (None if no comment created yet)
-    comment = None
-
-    # Create a form instance with the submitted POST data
-    form = CommentForm(data=request.POST)
-
-    # Validate the form (check required fields, etc.)
-    if form.is_valid():
-        # Create a comment object without saving to database yet
-        comment = form.save(commit=False)
-
-        # Associate the comment with the post
-        comment.post = post
-
-        # Save the comment to database (active=False by default, pending moderation)
-        comment.save()
-
-    # Render the comment template with context
-    return render(
-        request,
-        'blog/post/templates/blog/comment/comment.html',
-        {'post': post, 'form': form, 'comment': comment}
-    )
-
 
 def post_search(request):
     """
@@ -374,57 +321,16 @@ def post_search(request):
             # Get the sanitized search query
             query = form.cleaned_data['query']
 
-            # --- Full-Text Search with Ranking ---
-            # Create a search vector: title (weight A) + body (weight B)
-            # Weight A is more important than weight B
-            search_vector = SearchVector('title', weight='A') + SearchVector('body', weight='B')
-
-            # Create a search query from the user's input
-            search_query = SearchQuery(query)
-
-            # Annotate posts with relevance rank and filter by minimum rank
-            full_text_results = Post.published.annotate(
-                rank=SearchRank(search_vector, search_query)
-            ).filter(
-                rank__gte=0.1  # Only posts with relevance > 10%
-            ).order_by(
-                '-rank',  # Most relevant first
-                '-publish'  # Then newest first
-            )
-
-            # --- Trigram (Fuzzy) Search for typos and partial matches ---
-            trigram_results = Post.published.annotate(
-                title_similarity=TrigramSimilarity('title', query),
-                body_similarity=TrigramSimilarity('body', query),
-                # Combined similarity: title counts twice as much as body
-                total_similarity=(
-                        TrigramSimilarity('title', query) * 2 +
-                        TrigramSimilarity('body', query)
-                )
-            ).filter(
-                # Match if either title OR body has sufficient similarity
-                Q(title_similarity__gt=0.1) | Q(body_similarity__gt=0.1)
-            ).order_by(
-                '-total_similarity',  # Most similar first
-                '-publish'  # Then newest first
-            )
-
-            # --- Combine both search methods ---
-            # Union of full-text and trigram results (no duplicates)
-            combined_results = (full_text_results | trigram_results).distinct()
-
-            # Final annotation with combined ranking
-            results = combined_results.annotate(
-                final_rank=SearchRank(search_vector, search_query) + (TrigramSimilarity('title', query) * 2)
-            ).order_by(
-                '-final_rank',  # Most relevant overall
-                '-publish'  # Then newest first
-            )
+            # SQLite-compatible search. PostgreSQL-specific full-text and
+            # trigram functions are intentionally avoided in this edition.
+            results = Post.published.filter(
+                Q(title__icontains=query) | Q(body__icontains=query)
+            ).order_by('-publish')
 
     # Render search template with results
     return render(
         request,
-        'blog/post/search.html',
+        'blog/post/search_post.html',
         {'form': form, 'query': query, 'results': results}
     )
 
@@ -450,7 +356,7 @@ def post_create(request):
     # Handle POST request (form submission)
     if request.method == 'POST':
         # Bind form with POST data
-        form = PostCreateForm(request.POST)
+        form = PostCreateForm(request.POST, request.FILES)
 
         # Validate the form
         if form.is_valid():
@@ -479,42 +385,348 @@ def post_create(request):
         # GET request: display empty form
         form = PostCreateForm()
 
-    # Render the create post template
-    return render(request, 'blog/post/create.html', {'form': form})
+    # Render the creation post template
+    return render(request, 'blog/post/create_post.html', {'form': form})
 
 
 def post_delete_success(request):
-    return render(request, 'blog/post/post_delete_successful.html')
+    """
+    View function for the post deletion success page.
+
+    This view renders a confirmation page that is shown to the user
+    after a post has been successfully deleted. It does not perform
+    any database operations and simply displays a success message.
+
+    Args:
+        request: HTTP request object
+    Returns:
+        Rendered HTML template with success message
+    """
+    return render(request, 'blog/post/post_delete_success.html')
+
 
 class PostDeleteView(LoginRequiredMixin, DeleteView):
+    """
+    Class-based view for deleting a post.
+
+    This view:
+    - Requires the user to be logged in (LoginRequiredMixin)
+    - Only allows the author of the post or a superuser to delete
+    - Shows a confirmation page before deletion (GET request)
+    - Deletes the post after confirmation (POST request)
+
+    Attributes:
+        model: The Post model to be deleted
+        template_name: The template for the delete confirmation page
+        success_url: The URL to redirect to after successful deletion
+        context_object_name: The name of the object in the template context
+        pk_url_kwarg: The URL parameter name for the primary key
+    """
+
+    # Specifies the model that this view operates on
     model = Post
+
+    # The template to render for the delete confirmation page
     template_name = 'blog/post/post_delete.html'
+
+    # The URL to redirect to after the post is successfully deleted
+    # Uses reverse_lazy to avoid circular import issues
     success_url = reverse_lazy('blog:post_delete_success')
+
+    # The name of the context variable available in the template
+    # Template will use {{ post }} to access the post object
     context_object_name = 'post'
+
+    # The URL parameter name that contains the primary key of the post
+    # In the URL pattern <int:pk>/delete/, 'pk' is the parameter name
     pk_url_kwarg = 'pk'
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Override dispatch method to add permission checks before processing.
+
+        This method is called before any request processing occurs.
+        It checks if the current user is the author of the post or a superuser.
+        If not, a PermissionDenied exception is raised.
+
+        Args:
+            request: HTTP request object
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+        Returns:
+            Response from parent dispatch method or raises PermissionDenied
+        """
+        # Retrieve the post object that is about to be deleted
         obj = self.get_object()
+
+        # Check if the current user is the author or a superuser
+        # If not, raise a PermissionDenied exception to prevent deletion
         if obj.author != request.user and not request.user.is_superuser:
             raise PermissionDenied("You are not allowed to delete this post.")
+
+        # Call the parent dispatch method to continue processing the request
         return super().dispatch(request, *args, **kwargs)
 
-    # def delete(self, request, *args, **kwargs):
-    #     """
-    #     重写 delete 方法，确保删除操作被执行。
-    #     """
-    #     obj = self.get_object()
-    #     obj.delete()
-    #     return redirect(self.success_url)
+@login_required
+@require_POST
+def add_comment(request, post_id):
+    """
+    View function for handling comment submission (POST only).
+
+    This view:
+    - Accepts only POST requests (decorated with @require_POST)
+    - Creates a new comment for the specified post
+    - Associates the comment with the post (foreign key)
+    - Comments are created with active=False by default (requires moderation)
+
+    :param request: HTTP request object (must be POST)
+    :param post_id: Primary key of the post to comment on
+    :return: Rendered comment template with post, form, and new comment
+    """
+
+    # Retrieve the published post by ID
+    post = get_object_or_404(
+        Post,
+        id=post_id,
+        status=Post.Status.PUBLISHED
+    )
+
+    # Initialize comment variable (None if no comment created yet)
+    comment = None
+
+    # Create a form instance with the submitted POST data
+    form = CommentForm(request.POST, request.FILES)
+
+    # Validate the form (check required fields, etc.)
+    if form.is_valid():
+        # Create a comment object without saving to database yet
+        comment = form.save(commit=False)
+
+        # Associate the comment with the post
+        comment.post = post
+        comment.name = request.user.username
+
+        # Save the comment to database (active=False by default, pending moderation)
+        comment.save()
+
+    # Render the comment template with context
+    return render(
+        request,
+        'blog/comment/add_comment_success.html',
+        {
+            'post': post,
+            'form': form,
+            'comment': comment
+        }
+    )
 
 
-# class ReturnHomePageView(Redirect):
-#     model = Post
-#     template_name = 'blog/post/.html'
+@login_required
+def edit_comment(request, post_slug, comment_id):
+    """
+    View function for editing an existing comment.
 
-# class CommentDeleteView(LoginRequiredMixin, DeleteView):
-#     model = Comment
-#     template_name = 'blog/post/delete_comment.html'
+    This view:
+    - Requires user to be logged in (@login_required)
+    - Verifies the comment belongs to the specified post (slug check)
+    - Only allows the comment author or superuser to edit
+    - Displays a form for editing the comment body
+
+    Args:
+        request: HTTP request object
+        post_slug: Slug of the post containing the comment
+        comment_id: ID of the comment to edit
+    Returns:
+        Rendered edit form or redirect to post detail page
+    """
+
+    # Retrieve the comment by its ID
+    # Returns 404 if the comment doesn't exist
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    # Verify the comment belongs to the correct post
+    # Prevents editing a comment from the wrong post URL
+    if comment.post.slug != post_slug:
+        return redirect('blog:post_list')
+
+    # Check if user has permission to edit
+    # Only the comment author or superuser can edit
+    if comment.name != request.user.username and not request.user.is_superuser:
+        return redirect(
+            'blog:post_detail',
+            year=comment.post.publish.year,
+            month=comment.post.publish.month,
+            day=comment.post.publish.day,
+            post_slug=comment.post.slug,
+        )
+
+    # Handle POST request (form submission)
+    if request.method == 'POST':
+        # Bind form with POST data and existing comment instance
+        form = CommentForm(data=request.POST, instance=comment)
+
+        # Validate the form
+        if form.is_valid():
+            # Save the updated comment to the database
+            form.save()
+            # Redirect to the post detail page after successful edit
+            return redirect(
+                'blog:post_detail',
+                year=comment.post.publish.year,
+                month=comment.post.publish.month,
+                day=comment.post.publish.day,
+                post_slug=comment.post.slug,
+            )
+
+    else:
+        # GET request: display the edit form with existing comment data
+        form = CommentForm(instance=comment)
+
+    # Render the edit comment template with context data
+    return render(
+        request,
+        'blog/comment/edit_comment.html',
+        {
+            'form': form,
+            'comment': comment,
+            'post': comment.post,
+        }
+    )
 
 
-def add_comment(self, request, *args, **kwargs):
+@login_required
+def comment_delete(request, post_slug, comment_id):
+    """
+    View function for deleting a comment.
+
+    This view:
+    - Requires user to be logged in (@login_required)
+    - Only allows the comment author or superuser to delete
+    - Redirects back to the post detail page after deletion
+
+    Args:
+        request: HTTP request object
+        post_slug: Slug of the post containing the comment
+        comment_id: ID of the comment to delete
+    Returns:
+        Redirect to post detail page or rendered confirmation template
+    """
+
+    # Retrieve the comment by its ID
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    # Check permission: only comment author or superuser can delete
+    if request.user.username != comment.name and not request.user.is_superuser:
+        messages.error(request, 'You are not allowed to delete this comment.')
+        return redirect(
+            'blog:post_detail',
+            year=comment.post.publish.year,
+            month=comment.post.publish.month,
+            day=comment.post.publish.day,
+            post_slug=comment.post.slug,
+        )
+
+    # Handle POST request (confirmation and deletion)
+    if request.method == 'POST':
+        post = comment.post
+        comment.delete()
+        messages.success(request, 'Comment deleted successfully.')
+        return redirect(
+            'blog:post_detail',
+            year=post.publish.year,
+            month=post.publish.month,
+            day=post.publish.day,
+            post_slug=post.slug,
+        )
+
+    # GET request: display the delete confirmation template
+    return render(request, 'blog/comment/delete_comment.html', {'comment': comment})
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                             RELATIONSHIP DIAGRAM                           │
+# │                              (My Site Project)                             │
+# └─────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─────────────┐
+# │    User     │
+# │  (auth.User)│
+# └──────┬──────┘
+#        │
+#        │ 1                      ╔══════════════╗
+#        ├────────────────────────║    Post      ║
+#        │ (One-to-Many)          ╚══════════════╝
+#        │  author = ForeignKey    │
+#        │                         │ has many
+#        │                         ▼
+#        │                    ┌─────────────┐
+#        │                    │   Comment   │
+#        │                    └──────┬──────┘
+#        │                           │
+#        │ 1                         │ belongs to
+#        ├───────────────────────────┤ (post = ForeignKey)
+#        │ (One-to-Many)             │
+#        │ name = username           │
+#        │                           │
+#        │ 1                         │
+#        ├───────────────────────────┤
+#        │ (One-to-One)              │
+#        │ profile = OneToOneField   │
+#        │                           │
+#        ▼                           ▼
+# ┌─────────────┐            ┌─────────────┐
+# │   Profile   │            │  ImagePost  │
+# │  (users)    │            │  (images)   │
+# └─────────────┘            └─────────────┘
+#        │
+#        │ 1
+#        ├───────────────────┐
+#        │ (One-to-One)       │
+#        │ preferences        │
+#        │                    ▼
+#        │            ┌─────────────┐
+#        │            │ UserPreference │
+#        │            │  (users)    │
+#        │            └─────────────┘
+#        │
+#        │ has many
+#        │ activities
+#        ▼
+# ┌─────────────┐
+# │ UserActivity │
+# │  (users)    │
+# └─────────────┘
+#
+#
+# ┌─────────────────────────────────────────────────────────────┐
+# │                         LEGEND                             │
+# ├─────────────────────────────────────────────────────────────┤
+# │ ────►  One-to-Many relationship (ForeignKey)             │
+# │ ────►  One-to-One relationship (OneToOneField)            │
+# │ ────►  Many-to-Many relationship (ManyToManyField/Tag)    │
+# └─────────────────────────────────────────────────────────────┘
+#
+#
+# ┌─────────────────────────────────────────────────────────────┐
+# │                     QUERY EXAMPLES                         │
+# ├─────────────────────────────────────────────────────────────┤
+# │ 1. Get all posts by a user:                               │
+# │    user.blog_posts.all()                                 │
+# │                                                           │
+# │ 2. Get author of a post:                                 │
+# │    post.author.username                                  │
+# │                                                           │
+# │ 3. Get profile of a user:                                │
+# │    user.profile.bio                                      │
+# │                                                           │
+# │ 4. Get all comments on a post:                           │
+# │    post.comments.all()                                   │
+# │                                                           │
+# │ 5. Get all comments by a user:                           │
+# │    Comment.objects.filter(name=user.username)            │
+# │                                                           │
+# │ 6. Get user preferences:                                 │
+# │    user.preferences.theme                                │
+# │                                                           │
+# │ 7. Get user activities:                                  │
+# │    user.activities.all()                                 │
+# └─────────────────────────────────────────────────────────────┘

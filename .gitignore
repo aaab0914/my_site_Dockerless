@@ -44,3 +44,13 @@ users.txt
 # 忽略日志文件
 access.log
 *.log
+
+# 日志文件
+logs/
+access.log
+*.log
+analyze_logs.py
+
+Shell_Commands/
+media/
+Others

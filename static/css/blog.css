@@ -1,157 +1,213 @@
-body { 
-    margin:0;
-    padding:0;
-    font-family:helvetica, sans-serif;
+/* ========================================
+   基础样式
+   ======================================== */
 
-
+body {
+    margin: 0;
+    padding: 0;
+    font-family: helvetica, sans-serif;
 }
 
-
 a {
-    color:#00abff;
-    text-decoration:none;
+    color: #00abff;
+    text-decoration: none;
 }
 
 h1 {
-    font-weight:normal;
-    border-bottom:1px solid #bbb;
-    padding:0 0 10px 0;
+    font-weight: normal;
+    border-bottom: 1px solid #bbb;
+    padding: 0 0 10px 0;
 }
 
 h2 {
-    font-weight:normal;
-    margin:30px 0 0;
-}
-
-#content {
-    float:left;
-    width:60%;
-    padding:0 0 0 30px;
-}
-
-#sidebar {
-    float:right;
-    width:30%;
-    padding:10px;
-    background:#efefef;
-    height:100%;
+    font-weight: normal;
+    margin: 30px 0 0;
 }
 
 p.date {
-    color:#ccc;
+    color: #ccc;
     font-family: georgia, serif;
     font-size: 12px;
     font-style: italic;
 }
 
 .left {
-    float:left;
-    margin-right:10px;
+    float: left;
+    margin-right: 10px;
 }
 
-/* pagination */
+
+/* ========================================
+   布局
+   ======================================== */
+
+#content {
+    float: left;
+    width: 60%;
+    padding: 0 0 0 30px;
+}
+
+#sidebar {
+    float: right;
+    width: 30%;
+    padding: 10px;
+    background: #efefef;
+    height: 100%;
+}
+
+
+/* ========================================
+   分页
+   ======================================== */
+
 .pagination {
-    margin:40px 0;
-    font-weight:bold;
+    margin: 40px 0;
+    font-weight: bold;
+    clear: both;
+    text-align: center;
 }
 
-/* forms */
-label {
-    float:left;
-    clear:both;
-    color:#333;
-    margin-bottom:4px;
-}
-input, textarea {
-    clear:both;
-    float:left;
-    margin:0 0 10px;
-    background:#ededed;
-    border:0;
-    padding:6px 10px;
-    font-size:12px;
-}
-input[type=submit] {
-    font-weight:bold;
-    background:#00abff;
-    color:#fff;
-    padding:10px 20px;
-    font-size:14px;
-    text-transform:uppercase;
-}
-.errorlist {
-    color:#cc0033;
-    float:left;
-    clear:both;
-    padding-left:10px;
-}
-
-/* comments */
-.comment {
-    padding:10px;
-}
-.comment:nth-child(even) {
-    background:#efefef;
-}
-.comment .info {
-    font-weight:bold;
-    font-size:12px;
-    color:#666;
-}
-
-//* pagination */
-.pagination {
-    margin:40px 0;
-    font-weight:bold;
-}
-
-/* 固定在左下角的分页（替代原来的 .pagination 样式） */
-.fixed-pagination {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 10px 15px;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    font-size: 14px;
-    font-family: helvetica, sans-serif;
-}
-
-.fixed-pagination a {
+.pagination a {
     color: #00abff;
     text-decoration: none;
     padding: 0 5px;
 }
 
-.fixed-pagination a:hover {
+.pagination a:hover {
     text-decoration: underline;
 }
 
-.fixed-pagination .current {
+.pagination .current {
     font-weight: bold;
     color: #333;
     padding: 0 5px;
 }
 
-/* 适配移动端 */
-@media (max-width: 768px) {
-    .fixed-pagination {
-        bottom: 10px;
-        left: 10px;
-        font-size: 12px;
-        padding: 8px 12px;
-    }
-}
-
-/* 禁用状态的链接 */
-.fixed-pagination .disabled {
+.pagination .disabled {
     color: #ccc;
     cursor: not-allowed;
     padding: 0 5px;
 }
 
-.fixed-pagination .disabled:hover {
+.pagination .disabled:hover {
     text-decoration: none;
+}
+
+
+/* ========================================
+   表单
+   ======================================== */
+
+label {
+    float: left;
+    clear: both;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+input, textarea {
+    clear: both;
+    float: left;
+    margin: 0 0 10px;
+    background: #ededed;
+    border: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+input[type=submit] {
+    font-weight: bold;
+    background: #00abff;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.errorlist {
+    color: #cc0033;
+    float: left;
+    clear: both;
+    padding-left: 10px;
+}
+
+
+/* ========================================
+   评论
+   ======================================== */
+
+.comment {
+    padding: 10px;
+}
+
+.comment:nth-child(even) {
+    background: #efefef;
+}
+
+.comment .info {
+    font-weight: bold;
+    font-size: 12px;
+    color: #666;
+}
+
+
+/* ========================================
+   按钮样式
+   ======================================== */
+
+/* 删除按钮容器 - 右下角 */
+.post-delete-container {
+    text-align: right;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+    display: inline-block;
+    background-color: #ff4444;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.delete-btn:hover {
+    background-color: #cc0000;
+    text-decoration: none;
+}
+
+/* 作者按钮样式 */
+.author-button {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: #00abff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.author-button:hover {
+    background-color: #0088cc;
+}
+
+/* Tag 按钮样式 */
+.tag-button {
+    display: inline-block;
+    padding: 2px 8px;
+    margin: 0 2px;
+    background-color: #00abff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.tag-button:hover {
+    background-color: #0088cc;
 }

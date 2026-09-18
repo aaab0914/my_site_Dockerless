@@ -151,6 +151,9 @@ class SearchTest(TestCase):
             email='test@example.com',
             password='testpass123'
         )
+        # 登录用户
+        self.client.login(username='testuser', password='testpass123')
+
         self.post1 = Post.objects.create(
             title='Django Search Test',
             slug='django-search-test',
@@ -177,24 +180,20 @@ class SearchTest(TestCase):
         )
 
     def test_search_by_body(self):
-        """Test searching by post body."""
         response = self.client.get(reverse('blog:post_search'), {'query': 'JavaScript'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'JavaScript Search Test')
 
     def test_search_by_title(self):
-        """Test searching by post title."""
         response = self.client.get(reverse('blog:post_search'), {'query': 'Django'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Django Search Test')
 
     def test_search_empty_query(self):
-        """Test searching with an empty query."""
         response = self.client.get(reverse('blog:post_search'), {'query': ''})
         self.assertEqual(response.status_code, 200)
 
     def test_search_no_results(self):
-        """Test searching for a non-existent term."""
         response = self.client.get(reverse('blog:post_search'), {'query': 'NonexistentTerm'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Found 0 Results')
@@ -320,3 +319,25 @@ class DockerTest(TestCase):
         )
         self.assertIn('my_site_web', result.stdout)
         self.assertIn('my_site_db', result.stdout)
+
+# blog/tests.py
+class RSSFeedTest(TestCase):
+    def setUp(self):
+        # 创建测试用户
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        # 登录用户
+        self.client.login(username='testuser', password='testpass123')
+        # 创建 5 篇测试文章
+        for i in range(5):
+            Post.objects.create(
+                title=f'RSS Test Post {i}',
+                slug=f'rss-test-post-{i}',
+                body=f'This is RSS test post {i} body.',
+                author=self.user,
+                status=Post.Status.PUBLISHED,
+                publish=timezone.now()
+            )

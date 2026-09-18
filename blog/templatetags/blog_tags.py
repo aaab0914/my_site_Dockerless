@@ -195,6 +195,22 @@ def markdown_format(text):
     # Step 2: mark_safe() tells Django not to auto-escape the HTML
     return mark_safe(markdown.markdown(text))
 
+@register.simple_tag
+def user_posts_count(user):
+    """
+    Returns the number of posts written by the specified user.
+
+    Usage:
+        {% user_posts_count request.user %}
+
+    Returns:
+        int: Number of posts by the user
+    :param user:
+    :return:
+    """
+    if user.is_authenticated:
+        return Post.objects.filter(author=user).count()
+    return 0
 # =====================
 # TEMPLATE USAGE EXAMPLE
 # =====================

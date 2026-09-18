@@ -1,283 +1,84 @@
-<!--
-    blog/templates/blog/base.html
-    ========================================
-    BASE TEMPLATE FOR BLOG APPLICATION
-    ========================================
-
-    This is the foundation template that all other blog templates inherit from.
-    It defines the common structure, navigation, and sidebar elements that appear
-    on every page of the blog.
-
-    Templates that extend this base template:
-    - list.html (post list page)
-    - detail.html (post detail page)
-    - create.html (create new post page)
-    - search.html (search results page)
-    - share.html (share post page)
-
-    Blocks that child templates can override:
-    - title: Page-specific title (appears in browser tab)
-    - content: Main page content area
--->
-
-{# ===================== LOAD CUSTOM TEMPLATE TAGS ===================== #}
-
 {% load blog_tags %}
-<!--
-    Loads custom template tags defined in blog/templatetags/blog_tags.py
-    Provides the following tags for use in this template:
-    - {% total_posts %} - Displays total number of published posts
-    - {% show_latest_posts %} - Renders a list of recent posts (inclusion tag)
-    - {% get_most_commented_posts as variable_name %} - Retrieves most commented posts
--->
-
 {% load static %}
-<!--
-    Loads Django's static template tag library.
-    Allows referencing static files like CSS, JavaScript, and images.
-    Uses settings.STATIC_URL configuration (typically '/static/')
--->
 
 <!DOCTYPE html>
-<!--
-    Document type declaration for HTML5.
-    Ensures browser renders page in standards mode.
--->
-
 <html>
-<!--
-    Root element of the HTML document.
-    Contains the entire webpage content.
--->
-
 <head>
-    <!--
-        HEAD SECTION
-        Contains metadata, title, stylesheet links, and other document-level information.
-        Content here is not visible in the browser body.
-    -->
-
     <title>{% block title %}{% endblock %}</title>
-    <!--
-        Browser tab title.
-        Child templates can override the 'title' block to set page-specific titles.
-        Examples:
-        - List page title: "My Blog"
-        - Detail page title: "Post Title | My Blog"
-        - Create page title: "Create New Post | My Blog"
-    -->
-
     <link href="{% static "css/blog.css" %}" rel="stylesheet">
-    <!--
-        Link to the main CSS stylesheet for the blog.
-        {% static "css/blog.css" %} resolves to:
-        - Development: /static/css/blog.css
-        - Production: /static/css/blog.css (after collectstatic)
-
-        The CSS file should be located at: blog/static/css/blog.css
-
-        Expected content example:
-        .blog-home { font-size: 1.2rem; margin-bottom: 20px; }
-        #sidebar { float: right; width: 250px; margin-left: 20px; }
-        #content { float: left; width: 650px; }
-    -->
 </head>
-
 <body>
-<!--
-    BODY SECTION
-    Main visible content of the webpage.
-    Contains two main sections: #content (main area) and #sidebar (right column).
--->
 
 <div id="content">
-    <!--
-        MAIN CONTENT AREA (Left side)
-        Displays the primary content for each page.
-        Child templates insert their page-specific content into the 'content' block.
-    -->
-
-    <!-- 将 Blog Home 移到 content 内部 -->
-    <!-- Chinese comment: "Move Blog Home inside content" - Places navigation link within main area -->
-
     <p class="blog-home">
-        <a href="{% url 'blog:post_list' %}">🏠 Blog Home</a>
+        <a href="{% url 'blog:all_posts_list' %}">🏠 Blog Home</a>
     </p>
-    <!--
-        Home page navigation link with house emoji.
-        {% url 'blog:post_list' %} resolves to the URL named 'post_list' in the 'blog' namespace.
-        Typical URL: /blog/ or /
-        The 'blog-home' CSS class can be styled in blog.css.
-    -->
 
     {% block content %}
-    <!--
-        CONTENT BLOCK
-        Child templates override this block to provide page-specific content.
-
-        Examples of what child templates provide:
-        - list.html: List all blog posts with pagination
-        - detail.html: Single post with comments
-        - create.html: Form for creating new posts
-        - search.html: Search results display
-    -->
     {% endblock %}
 </div>
 
-<!-- 在侧边栏或导航栏中添加 -->
-<!-- Chinese comment: "Add to sidebar or navigation bar" -->
-
-{% if user.is_authenticated %}
-    <!--
-        CHECK USER AUTHENTICATION STATUS
-        Only shows the "Create New Post" link to logged-in users.
-        Anonymous users (not logged in) will not see this link.
-
-        user.is_authenticated is provided by Django's authentication system.
-        Available in all templates when using django.contrib.auth.context_processors.auth
-        (enabled by default in Django's TEMPLATES setting).
-    -->
-
-    <p>
-        <a href="{% url 'blog:post_create' %}">✏️ Create New Post</a>
-    </p>
-    <!--
-        Create new post link with pencil emoji.
-        Only visible to authenticated users (admins/authorized users).
-        {% url 'blog:post_create' %} resolves to the post creation form URL.
-        Typical URL: /blog/create/
-    -->
-{% endif %}
-
 <div id="sidebar">
-    <!--
-        SIDEBAR AREA (Right side)
-        Contains blog metadata, search, statistics, and widgets.
-        Appears on every page of the blog.
-        Typically styled with float: right, fixed width, etc.
-    -->
+    <!-- 登录/注册链接始终可见（对未登录用户） -->
+    {% if user.is_authenticated %}
+        <!-- ======================================== -->
+        <!-- 以下内容仅对已登录用户可见 -->
+        <!-- ======================================== -->
+        <p>Welcome, {{ request.user.username }}!</p>
 
-    <h2></h2>
-    <!--
-        Empty heading placeholder.
-        Might be used for future customization (e.g., sidebar title).
-        Currently serves no visible purpose.
-    -->
+        <p>
+            <a href="{% url 'blog:post_create' %}">✏️ Create New Post</a>
+        </p>
 
-    <!-- 添加搜索按钮 -->
-    <!-- Chinese comment: "Add search button" -->
+        <p>
+            <a href="{% url 'users:profile' %}">My Profile</a> |
+            <a href="{% url 'users:logout' %}">Logout</a>
+        </p>
+        <p>
+            <a href="{% url 'users:account_delete' %}" style="color: #cc0000;">
+                Delete Account
+            </a>
+        </p>
 
-    <div class="search-button-container">
-        <a href="{% url 'blog:post_search' %}" class="search-button-link">
-            🔍 Search Posts
-        </a>
-    </div>
-    <!--
-        Search page link with magnifying glass emoji.
-        Clicking this button takes user to the search page (/blog/search/).
-        The search page contains a form for entering keywords.
-        CSS classes: 'search-button-container' and 'search-button-link' for styling.
-    -->
+        <div class="search-button-container">
+            <a href="{% url 'blog:post_search' %}" class="search-button-link">
+                🔍 Search Posts
+            </a>
+        </div>
 
-    <p>
-        This is My Blog.
-        I've Written {% total_posts %} Posts so far.
-    </p>
-    <!--
-        Blog statistics display.
-        {% total_posts %} is a custom simple_tag from blog_tags.py.
-        Executes: Post.published.count()
-        Returns the total number of published posts.
+        <p>
+            This is My_Site Blog.
+            I'm Written {% user_posts_count request.user %} Posts so far.
+        </p>
 
-        Example output: "This is My Blog. I've Written 42 Posts so far."
-    -->
+        <p>
+            <a href="{% url "blog:post_feed" %}">
+                Subscribe to My RSS Feed
+            </a>
+        </p>
 
-    <p>
-        <a href="{% url "blog:post_feed" %}">
-            Subscribe to My RSS Feed
-        </a>
-    </p>
-    <!--
-        RSS Feed subscription link.
-        Allows users to subscribe to blog updates using RSS readers.
-        {% url "blog:post_feed" %} resolves to the RSS feed URL.
-        Typical URL: /blog/feed/
-        The RSS feed view returns XML content with syndicated post data.
-    -->
+        <h3>Latest Posts:</h3>
+        {% show_latest_posts %}
 
-    <h3>Latest Posts:</h3>
-    <!--
-        Latest posts section heading.
-        Displays the most recent N posts (default 5).
-    -->
-
-    {% show_latest_posts %}
-    <!--
-        INCLUSION TAG - Renders a template fragment with latest posts.
-
-        Defined in blog_tags.py:
-            @register.inclusion_tag('blog/post/latest_posts.html')
-            def show_latest_posts(count=5):
-                latest_posts = Post.published.order_by('-publish')[:count]
-                return {'latest_posts': latest_posts}
-
-        The tag renders the template: blog/templates/blog/post/latest_posts.html
-        Expected output format: <ul><li><a href="...">Post Title</a></li>...</ul>
-    -->
-
-    {% get_most_commented_posts as most_commented_posts %}
-    <!--
-        RETRIEVE MOST COMMENTED POSTS
-        Custom simple_tag that assigns results to a context variable.
-
-        Defined in blog_tags.py:
-            @register.simple_tag
-            def get_most_commented_posts(count=5):
-                return Post.published.annotate(
-                    total_comments=Count('comments')
-                ).filter(total_comments__gt=0).order_by('-total_comments')[:count]
-
-        'as most_commented_posts' saves the queryset to this variable name.
-        The variable can then be used later in the template (within the same request).
-    -->
-
-    {% if most_commented_posts %}
-        <!--
-            CONDITIONAL DISPLAY - Only show section if there are posts with comments.
-            If no posts have comments, the entire h3 heading and list are hidden.
-            Prevents displaying an empty list.
-        -->
-
-        <h3>Most Commented Posts:</h3>
-        <!--
-            Most commented posts section heading.
-            Only displayed when there is at least one post with comments.
-        -->
-
-        <ul>
-            <!--
-                Unordered list of most commented posts.
-                Posts are already ordered by total_comments descending (highest first).
-                Limited to 5 posts by default (configurable in the tag).
-            -->
-
-            {% for post in most_commented_posts %}
-                <!--
-                    Iterate through each post in the most_commented_posts queryset.
-                    Each 'post' variable is a Post model instance.
-                -->
-
-                <li>
-                    <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                </li>
-                <!--
-                    List item with hyperlink to the post's detail page.
-                    post.get_absolute_url() returns the canonical URL for the post.
-                    Example URL: /blog/2024/01/15/my-post-slug/
-                    Clicking takes user to the full post detail page.
-                -->
-            {% endfor %}
-        </ul>
+        {% get_most_commented_posts as most_commented_posts %}
+        {% if most_commented_posts %}
+            <h3>Most Commented Posts:</h3>
+            <ul>
+                {% for post in most_commented_posts %}
+                    <li>
+                        <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% else %}
+        <!-- ======================================== -->
+        <!-- 未登录用户只能看到注册和登录链接 -->
+        <!-- ======================================== -->
+        <p>
+            <a href="{% url 'users:login' %}">Log in</a> |
+            <a href="{% url 'users:register' %}">Register</a>
+        </p>
     {% endif %}
 </div>
 
