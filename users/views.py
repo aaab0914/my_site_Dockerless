@@ -24,9 +24,6 @@ from .forms import (
 from blog.models import Post, Comment
 
 
-
-
-
 def register(request):
     """
     Handles user registration.
@@ -57,7 +54,6 @@ def register(request):
     )
 
 
-
 def login_view(request):
     """
     Handles user login.
@@ -86,7 +82,6 @@ def login_view(request):
         'users/login.html',
         {'form': form}
     )
-
 
 
 @login_required
@@ -147,7 +142,6 @@ def profile_edit(request):
     )
 
 
-
 def logout_view(request):
     """
     Handles user logout.
@@ -160,7 +154,6 @@ def logout_view(request):
     """
     logout(request)
     return render(request, 'users/logout.html')
-
 
 
 def profile(request, username=None):
@@ -197,7 +190,6 @@ def profile(request, username=None):
     )
 
 
-
 @login_required
 def account_delete(request):
     """
@@ -223,7 +215,6 @@ def account_delete(request):
             return redirect('blog:all_posts_list')
 
     return render(request, 'users/account_delete.html')
-
 
 
 @login_required

@@ -16,9 +16,6 @@ from markdownx.models import MarkdownxField
 import markdown
 
 
-
-
-
 class PublishedManager(models.Manager):
     """
     Custom model manager that filters querysets to return only published posts.
@@ -41,7 +38,6 @@ class PublishedManager(models.Manager):
         return (
             super().get_queryset().filter(status=Post.Status.PUBLISHED)
         )
-
 
 
 class Post(models.Model):
@@ -112,7 +108,6 @@ class Post(models.Model):
     published = PublishedManager()
 
 
-
     class Meta:
         """
         Model metadata configuration.
@@ -173,7 +168,6 @@ class Post(models.Model):
         )
 
 
-
     def save(self, *args, **kwargs):
         """
         Override the save method to auto-populate slug from title.
@@ -208,7 +202,6 @@ class Post(models.Model):
         :return: HTML string converted from Markdown
         """
         return markdown.markdown(self.body)
-
 
 
 class Comment(models.Model):
@@ -248,7 +241,6 @@ class Comment(models.Model):
 
 
     active = models.BooleanField(default=True)
-
 
 
     class Meta:

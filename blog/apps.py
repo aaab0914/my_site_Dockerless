@@ -5,9 +5,6 @@ from django.apps import AppConfig
 from django.db import connection
 
 
-
-
-
 class BlogConfig(AppConfig):
     """
     Application configuration for the 'blog' app.
@@ -28,8 +25,6 @@ class BlogConfig(AppConfig):
 
 
     name = 'blog'
-
-
 
 
     def ready(self):

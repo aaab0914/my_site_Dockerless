@@ -6,9 +6,6 @@ from django.utils.html import format_html
 from .models import Post, Comment
 
 
-
-
-
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     """
@@ -71,7 +68,6 @@ class PostAdmin(admin.ModelAdmin):
     show_facets = admin.ShowFacets.ALWAYS
 
 
-
     class Media:
         """
         Custom CSS and JavaScript for the admin interface.
@@ -83,8 +79,6 @@ class PostAdmin(admin.ModelAdmin):
         css = {
             'all': ('admin/css/markdownx_admin.css',)
         }
-
-
 
 
 @admin.register(Comment)

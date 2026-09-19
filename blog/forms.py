@@ -1,19 +1,5 @@
-# forms.py
-# ========================================
-# Imports
-# ========================================
-
 from django import forms
-# forms: Django's form handling module for creating and validating forms
-
-from .models import Post, Comment
-# Comment: The comment model (imported from the current app)
-# Post: The main blog post model (imported from the current app)
-
-
-# ========================================
-# Forms
-# ========================================
+from .models import Comment, Post
 
 class EmailPostForm(forms.Form):
     """
@@ -36,7 +22,6 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['body', 'image']
         widgets = {
-            # 'name': forms.TextInput(attrs={'class': 'form-control'}),
             'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }

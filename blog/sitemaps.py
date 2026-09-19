@@ -1,18 +1,5 @@
-# blog/sitemaps.py
-# ========================================
-# Imports
-# ========================================
-
 from django.contrib.sitemaps import Sitemap
-# Sitemap: Base class for creating sitemaps in Django
-
 from .models import Post
-# Post: The main blog post model (imported from the current app)
-
-
-# ========================================
-# Sitemap Configuration
-# ========================================
 
 class PostSitemap(Sitemap):
     """

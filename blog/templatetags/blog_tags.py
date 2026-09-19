@@ -11,12 +11,7 @@ from ..models import Post
 import markdown
 
 
-
-
 register = template.Library()
-
-
-
 
 
 @register.simple_tag
@@ -36,7 +31,6 @@ def total_posts():
     :return: Integer count of all published posts
     """
     return Post.published.count()
-
 
 
 @register.inclusion_tag('blog/post/latest_posts.html')
@@ -72,7 +66,6 @@ def show_latest_posts(count=5):
     return {'latest_posts': latest_posts}
 
 
-
 @register.simple_tag
 def get_most_commented_posts(count=5):
     """
@@ -104,7 +97,6 @@ def get_most_commented_posts(count=5):
     ).order_by(
         '-total_comments'  # Descending order (highest first)
     )[:count]  # Limit to 'count' number of results
-
 
 
 @register.filter(name='markdown')

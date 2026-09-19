@@ -14,11 +14,9 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 
-
 sitemaps = {
     'posts': PostSitemap,
 }
-
 
 
 urlpatterns = [

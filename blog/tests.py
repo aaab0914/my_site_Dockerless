@@ -18,7 +18,6 @@ import subprocess
 import unittest
 
 
-
 class TagTest(TestCase):
     """
     Test case for tag creation, addition, and querying.
