@@ -6,28 +6,21 @@ from .models import Comment
 from django.contrib.auth.models import User
 import re
 
-# Signal: triggered when a Post instance is saved (created or updated)
 @receiver(post_save, sender=Post)
 def post_saved_handler(sender, instance, created, **kwargs):
     if created:
         print(f"New post '{instance.title}' created by {instance.author.username}")
-        # You can add custom logic here: send notification, update cache, etc.
     else:
         print(f"Post '{instance.title}' updated. Status: {instance.status}")
 
-# Signal: triggered before a Post instance is deleted
 @receiver(pre_delete, sender=Post)
 def post_deleted_handler(sender, instance, **kwargs):
     print(f"Post '{instance.title}' is being deleted by {instance.author.username}")
-    # You can add clean-up logic here: delete images, log action, etc.
 
 
 @receiver(pre_save, sender=User)
 def validate_user_chars(sender, instance, **kwargs):
     chinese_pattern = re.compile(r'[\u4e00-\u9fff]')
 
-    # Validate the username.
     if chinese_pattern.search(instance.username):
         raise ValidationError('Username cannot contain Chinese characters.')
-
-    # Passwords are hashed and cannot be validated directly here.

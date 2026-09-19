@@ -1,4 +1,3 @@
-# Dockerfile
 # Use the official Python image.
 FROM python:3.12-slim
 
@@ -26,7 +25,6 @@ RUN pip install --upgrade pip && \
 COPY . /app/
 
 # Collect static files.
-# RUN python manage.py collectstatic --noinput
 
 # Expose the application port.
 EXPOSE 8000

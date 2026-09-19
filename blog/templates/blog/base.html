@@ -19,12 +19,10 @@
 </div>
 
 <div id="sidebar">
-    <!-- Login and registration links are always visible to guests. -->
-    {% if user.is_authenticated %}
-        <!-- ======================================== -->
-        <!-- The following links are visible only to authenticated users. -->
-        <!-- ======================================== -->
-        <p>Welcome, {{ request.user.username }}!</p>
+{% if user.is_authenticated %}
+
+
+<p>Welcome, {{ request.user.username }}!</p>
 
         <p>
             <a href="{% url 'blog:post_create' %}">✏️ Create New Post</a>
@@ -72,10 +70,9 @@
             </ul>
         {% endif %}
     {% else %}
-        <!-- ======================================== -->
-        <!-- Guests can only see registration and login links. -->
-        <!-- ======================================== -->
-        <p>
+
+
+<p>
             <a href="{% url 'users:login' %}">Log in</a> |
             <a href="{% url 'users:register' %}">Register</a>
         </p>
