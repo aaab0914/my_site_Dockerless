@@ -2,22 +2,12 @@ from django import forms
 from .models import Comment, Post
 
 class EmailPostForm(forms.Form):
-    """
-    Form for sharing a post via email.
-    """
     name = forms.CharField(max_length=25)
     email = forms.EmailField()
     to = forms.EmailField()
-    comment = forms.CharField(
-        required=False,
-        widget=forms.Textarea
-    )
-
+    comment = forms.CharField(required=False, widget=forms.Textarea)
 
 class CommentForm(forms.ModelForm):
-    """
-    Form for adding a comment to a post.
-    """
     class Meta:
         model = Comment
         fields = ['body', 'image']
@@ -26,18 +16,10 @@ class CommentForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-
 class SearchForm(forms.Form):
-    """
-    Form for searching posts by keyword.
-    """
     query = forms.CharField()
 
-
 class PostCreateForm(forms.ModelForm):
-    """
-    Form for creating a new post.
-    """
     class Meta:
         model = Post
         fields = ['title', 'body', 'tags', 'cover_image']

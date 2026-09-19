@@ -51,6 +51,5 @@ access.log
 *.log
 analyze_logs.py
 
-Shell_Commands/
+NotInProject/
 media/
-Others
