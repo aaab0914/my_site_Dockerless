@@ -26,9 +26,8 @@ def post_deleted_handler(sender, instance, **kwargs):
 def validate_user_chars(sender, instance, **kwargs):
     chinese_pattern = re.compile(r'[\u4e00-\u9fff]')
 
-    # 验证用户名
+    # Validate the username.
     if chinese_pattern.search(instance.username):
-        raise ValidationError('用户名不能包含中文字符')
+        raise ValidationError('Username cannot contain Chinese characters.')
 
-    # 验证密码（注意：密码是哈希后的，无法直接验证）
-    # 需要在密码设置时验证，这里无法验证
+    # Passwords are hashed and cannot be validated directly here.

@@ -19,10 +19,10 @@
 </div>
 
 <div id="sidebar">
-    <!-- 登录/注册链接始终可见（对未登录用户） -->
+    <!-- Login and registration links are always visible to guests. -->
     {% if user.is_authenticated %}
         <!-- ======================================== -->
-        <!-- 以下内容仅对已登录用户可见 -->
+        <!-- The following links are visible only to authenticated users. -->
         <!-- ======================================== -->
         <p>Welcome, {{ request.user.username }}!</p>
 
@@ -73,7 +73,7 @@
         {% endif %}
     {% else %}
         <!-- ======================================== -->
-        <!-- 未登录用户只能看到注册和登录链接 -->
+        <!-- Guests can only see registration and login links. -->
         <!-- ======================================== -->
         <p>
             <a href="{% url 'users:login' %}">Log in</a> |

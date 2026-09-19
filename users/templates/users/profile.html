@@ -82,14 +82,14 @@
         </p>
     {% endif %}
 
-    <!-- RSS 订阅按钮 -->
+    <!-- RSS subscription button. -->
     <div style="margin-top: 20px;">
         <a href="{% url 'blog:user_feed' user.username %}" style="display: inline-block; padding: 8px 16px; background: #00abff; color: white; text-decoration: none; border-radius: 4px;">
             📡 RSS Feed
         </a>
     </div>
 
-    <!-- 只有本人才能看到编辑按钮 -->
+    <!-- Only the profile owner can see the edit button. -->
     {% if user == request.user %}
         <div style="margin-top: 10px;">
             <a href="{% url 'users:profile_edit' %}" style="background: #00abff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 10px;">Edit Profile</a>

@@ -1,5 +1,5 @@
 /* ========================================
-   基础样式
+   Base styles
    ======================================== */
 
 body {
@@ -38,7 +38,7 @@ p.date {
 
 
 /* ========================================
-   布局
+   Layout
    ======================================== */
 
 #content {
@@ -57,7 +57,7 @@ p.date {
 
 
 /* ========================================
-   分页
+   Pagination
    ======================================== */
 
 .pagination {
@@ -95,7 +95,7 @@ p.date {
 
 
 /* ========================================
-   表单
+   Forms
    ======================================== */
 
 label {
@@ -133,7 +133,7 @@ input[type=submit] {
 
 
 /* ========================================
-   评论
+   Comments
    ======================================== */
 
 .comment {
@@ -152,17 +152,17 @@ input[type=submit] {
 
 
 /* ========================================
-   按钮样式
+   Button styles
    ======================================== */
 
-/* 删除按钮容器 - 右下角 */
+/* Delete button container - bottom right. */
 .post-delete-container {
     text-align: right;
     margin-top: 20px;
     margin-bottom: 20px;
 }
 
-/* 删除按钮样式 */
+/* Delete button styles. */
 .delete-btn {
     display: inline-block;
     background-color: #ff4444;
@@ -179,7 +179,7 @@ input[type=submit] {
     text-decoration: none;
 }
 
-/* 作者按钮样式 */
+/* Author button styles. */
 .author-button {
     display: inline-block;
     padding: 2px 8px;
@@ -195,7 +195,7 @@ input[type=submit] {
     background-color: #0088cc;
 }
 
-/* Tag 按钮样式 */
+/* Tag button styles. */
 .tag-button {
     display: inline-block;
     padding: 2px 8px;

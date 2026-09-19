@@ -1,35 +1,35 @@
 # Dockerfile
-# 使用官方的Python镜像
+# Use the official Python image.
 FROM python:3.12-slim
 
-# 设置环境变量（修复警告）
+# Set environment variables.
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# 设置工作目录
+# Set the working directory.
 WORKDIR /app
 
-# 安装系统依赖（如果需要）
+# Install system dependencies when needed.
 RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制requirements文件
+# Copy the requirements file.
 COPY requirements.txt /app/
 
-# 安装Python依赖
+# Install Python dependencies.
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# 复制项目文件
+# Copy the project files.
 COPY . /app/
 
-# 收集静态文件（如果是Django项目）
+# Collect static files.
 # RUN python manage.py collectstatic --noinput
 
-# 暴露端口
+# Expose the application port.
 EXPOSE 8000
 
-# 启动命令
+# Start the application.
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

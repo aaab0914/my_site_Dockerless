@@ -6,7 +6,7 @@
 {% block content %}
     <h1>{{ post.title }}</h1>
 
-    <!-- 添加封面图片显示 -->
+    <!-- Display the cover image. -->
     {% if post.cover_image %}
         <div style="margin-bottom: 20px;">
             <img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
@@ -18,19 +18,19 @@
         Published {{ post.publish }} by {{ post.author }}
     </p>
 
-    <!-- 文章正文 -->
+    <!-- Post body. -->
     <div class="post-body">
         {{ post.get_markdown_body|safe }}
     </div>
 
-    <!-- 删除按钮容器（右下角） -->
+    <!-- Delete button container. -->
     <div class="post-delete-container">
         {% if user.is_authenticated and user == post.author or user.is_superuser %}
             <a href="{% url 'blog:post_delete' post.pk %}" class="delete-btn">Delete Post</a>
         {% endif %}
     </div>
 
-    <!-- 仅登录用户可见的评论 -->
+    <!-- Comments are visible only to authenticated users. -->
     {% if user.is_authenticated %}
         {% with comments.count as total_comments %}
             <h2>

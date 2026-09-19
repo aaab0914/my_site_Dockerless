@@ -4,8 +4,8 @@ from django.urls import reverse
 
 class LoginRequiredMiddleware:
     """
-    中间件：强制未登录用户只能访问首页、登录和注册页面。
-    访问其他任何页面都跳转到登录页面。
+    Require unauthenticated users to stay on public pages.
+    Redirect all other requests to the login page.
     """
 
     def __init__(self, get_response):

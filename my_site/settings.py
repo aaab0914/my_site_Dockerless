@@ -31,8 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
 
     'django_extensions',
-    'rest_framework',  # 添加这一行
-    'django_filters',  # 如果您已经添加了
+    'rest_framework',
+    'django_filters',
     'rest_framework.authtoken',
 
     'blog.apps.BlogConfig',

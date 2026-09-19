@@ -24,5 +24,5 @@ class ImagePost(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        # 直接调用父类的 save()，不进行任何压缩
+        # Call the parent save() without compression.
         super().save(*args, **kwargs)

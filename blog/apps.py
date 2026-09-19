@@ -68,16 +68,16 @@ class BlogConfig(AppConfig):
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
 
-            print(f"[OK] {self.name} 数据库连接正常")
+            print(f"[OK] {self.name} database connection is healthy")
 
         except Exception as e:
-            print(f"[WARNING] {self.name} 数据库连接异常: {e}")
+            print(f"[WARNING] {self.name} database connection failed: {e}")
 
 
         try:
             from . import signals
 
-            print(f"[OK] {self.name} 信号已注册")
+            print(f"[OK] {self.name} signals registered")
 
         except ImportError:
-            print(f"ℹ️ {self.name} 没有 signals.py 文件，跳过信号注册")
+            print(f"[INFO] {self.name} has no signals.py; skipping signal registration")
