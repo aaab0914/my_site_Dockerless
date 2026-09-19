@@ -1,57 +1,33 @@
-# tests.py
-# ========================================
-# Imports
-# ========================================
 
 from django.test import TestCase, Client
-# TestCase: Base class for writing Django unit tests
-# Client: Simulated HTTP client for testing views
 
 from django.urls import reverse
-# reverse: Function for generating URLs by resolving view names
 
 from django.contrib.auth.models import User
-# User: The built-in user model
 
 from django.utils import timezone
-# timezone: Utility for handling timezone-aware datetime operations
 
 from django.contrib.admin.sites import AdminSite
-# AdminSite: The Django admin site class
 
 from django.contrib.messages import get_messages
-# get_messages: Function for retrieving messages from the request
 
 from .models import Post, Comment
-# Post: The main blog post model
-# Comment: The comment model
 
 from .forms import CommentForm, SearchForm
-# CommentForm: Form for adding a comment
-# SearchForm: Form for searching posts
 
 from .admin import PostAdmin
-# PostAdmin: Admin configuration for the Post model
 
 from .feeds import LatestPostsFeed
-# LatestPostsFeed: RSS feed class for the blog
 
 from taggit.models import Tag
-# Tag: Model class representing tags
 
 import os
-# os: Operating system interface for file and directory operations
 
 import subprocess
-# subprocess: Module for running external commands
 
 import unittest
-# unittest: Python's built-in unit testing framework
 
 
-# ========================================
-# Test Cases
-# ========================================
 
 class TagTest(TestCase):
     """
@@ -151,7 +127,6 @@ class SearchTest(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        # 登录用户
         self.client.login(username='testuser', password='testpass123')
 
         self.post1 = Post.objects.create(
@@ -320,18 +295,14 @@ class DockerTest(TestCase):
         self.assertIn('my_site_web', result.stdout)
         self.assertIn('my_site_db', result.stdout)
 
-# blog/tests.py
 class RSSFeedTest(TestCase):
     def setUp(self):
-        # 创建测试用户
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
             password='testpass123'
         )
-        # 登录用户
         self.client.login(username='testuser', password='testpass123')
-        # 创建 5 篇测试文章
         for i in range(5):
             Post.objects.create(
                 title=f'RSS Test Post {i}',

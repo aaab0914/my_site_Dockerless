@@ -1,25 +1,13 @@
-# ========================================
-# IMPORTS
-# ========================================
 
 from django import forms
-# forms: Django's form handling framework
-# Provides base classes for creating and validating forms
 
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-# UserCreationForm: Built-in form for creating new user accounts
-# AuthenticationForm: Built-in form for user login (username/password validation)
 
 from django.contrib.auth.models import User
-# User: Django's built-in user model
 
 from .models import Profile
-# Profile: Custom user profile model from users app
 
 
-# ========================================
-# FORM: USER REGISTRATION
-# ========================================
 
 class UserRegisterForm(UserCreationForm):
     """
@@ -32,7 +20,6 @@ class UserRegisterForm(UserCreationForm):
         email: Custom EmailField with styling and validation
     """
 
-    # Custom email field with styling and required validation
     email = forms.EmailField(
         required=True,  # Email is mandatory for registration
         widget=forms.EmailInput(attrs={
@@ -42,16 +29,13 @@ class UserRegisterForm(UserCreationForm):
     )
 
     class Meta:
-        # Model associated with this form
         model = User
-        # Fields to include in the form (order matters for display)
         fields = (
             "username",
             "email",
             'password1',  # First password input
             'password2',  # Confirmation password input
         )
-        # Custom widgets for each field to add CSS classes and placeholders
         widgets = {
             "username": forms.TextInput(attrs={
                 "class": "form-control",
@@ -68,9 +52,6 @@ class UserRegisterForm(UserCreationForm):
         }
 
 
-# ========================================
-# FORM: USER LOGIN
-# ========================================
 
 class UserLoginForm(AuthenticationForm):
     """
@@ -84,7 +65,6 @@ class UserLoginForm(AuthenticationForm):
         password: Custom CharField with styling
     """
 
-    # Custom username field with styling
     username = forms.CharField(
         widget=forms.TextInput(attrs={
             "class": "form-control",
@@ -92,7 +72,6 @@ class UserLoginForm(AuthenticationForm):
         })
     )
 
-    # Custom password field with styling
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             "class": "form-control",
@@ -101,9 +80,6 @@ class UserLoginForm(AuthenticationForm):
     )
 
 
-# ========================================
-# FORM: USER PROFILE
-# ========================================
 
 class UserProfileForm(forms.ModelForm):
     """
@@ -116,11 +92,8 @@ class UserProfileForm(forms.ModelForm):
     """
 
     class Meta:
-        # Model associated with this form
         model = Profile
-        # Fields to include in the form
         fields = ['bio', 'location', 'birth_date', 'avatar']
-        # Custom widgets for each field to add CSS classes and input types
         widgets = {
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',

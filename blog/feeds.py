@@ -1,33 +1,19 @@
-# blog/feeds.py
-# ========================================
-# Imports
-# ========================================
 
 from django.contrib.syndication.views import Feed
-# Feed: Base class for creating RSS/Atom feeds in Django
 
 from django.urls import reverse_lazy
-# reverse_lazy: Lazy version of reverse() for generating URLs when the URL configuration is not yet loaded
 
 from django.shortcuts import get_object_or_404
-# get_object_or_404: Retrieves an object or raises a 404 error if not found
 
 from django.contrib.auth.models import User
-# User: The built-in user model
 
 from django.utils.html import strip_tags
-# strip_tags: Utility function to remove HTML tags from a string
 
 from django.template.defaultfilters import truncatewords
-# truncatewords: Template filter that truncates plain text to a specified number of words
 
 from .models import Post
-# Post: The main blog post model (imported from the current app)
 
 
-# ========================================
-# RSS Feed Classes
-# ========================================
 
 class LatestPostsFeed(Feed):
     """
@@ -42,14 +28,10 @@ class LatestPostsFeed(Feed):
         description: A description of the feed.
     """
 
-    # The title of the RSS feed (displayed in RSS readers)
     title = 'My Blog'
 
-    # The link to the blog's homepage (used as the feed's base URL)
-    # Uses reverse_lazy to avoid circular import issues
     link = reverse_lazy('blog:all_posts_list')
 
-    # A short description of the feed
     description = 'New Posts of My Blog.'
 
     def items(self):
@@ -82,9 +64,7 @@ class LatestPostsFeed(Feed):
         Returns:
             A plain text excerpt of the post
         """
-        # Convert Markdown to HTML, then strip all HTML tags
         plain_text = strip_tags(item.get_markdown_body())
-        # Truncate to 30 words and add ellipsis
         return truncatewords(plain_text, 30) + '...'
 
     def item_pubdate(self, item):
@@ -195,9 +175,7 @@ class UserPostsFeed(Feed):
         Returns:
             A plain text excerpt of the post
         """
-        # Convert Markdown to HTML, then strip all HTML tags
         plain_text = strip_tags(item.get_markdown_body())
-        # Truncate to 30 words and add ellipsis
         return truncatewords(plain_text, 30) + '...'
 
     def item_pubdate(self, item):
@@ -210,58 +188,3 @@ class UserPostsFeed(Feed):
             The publication date as a datetime object
         """
         return item.publish
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                             FEEDS RELATIONSHIP DIAGRAM                      │
-# │                              (My Blog Project)                              │
-# └─────────────────────────────────────────────────────────────────────────────┘
-#
-#                      ┌──────────────────────────────────────────────────────┐
-#                      │       django.contrib.syndication.views.Feed          │
-#                      │                 (Base Class)                         │
-#                      └─────────────────┬────────────────────────────────────┘
-#                                        │
-#                                        │ Inherits
-#                                        │
-#           ┌────────────────────────────┼────────────────────────────┐
-#           │                            │                            │
-#           ▼                            ▼                            ▼
-# ┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
-# │   LatestPostsFeed   │      │    UserPostsFeed    │      │    Other Feeds      │
-# ├─────────────────────┤      ├─────────────────────┤      ├─────────────────────┤
-# │  title: "My Blog"   │      │  title: dynamic     │      │  (Future extension) │
-# │  link: reverse_lazy │      │  link: dynamic      │      │                     │
-# │  description: "..." │      │  description: "..." │      │                     │
-# │  items: 5 latest    │      │  items: 5 per user  │      │                     │
-# │                     │      │                     │      │                     │
-# │  item_title()       │      │  item_title()       │      │                     │
-# │  item_description() │      │  item_description() │      │                     │
-# │  item_pubdate()     │      │  item_pubdate()     │      │                     │
-# └─────────────────────┘      └─────────────────────┘      └─────────────────────┘
-#        │                            │
-#        │                            │
-#        ▼                            ▼
-# ┌─────────────────────┐      ┌─────────────────────┐
-# │  Uses Post.published│      │  Uses Post.published│
-# │  .all()[:5]         │      │  .filter(author=obj)│
-# └─────────────────────┘      └─────────────────────┘
-#        │                            │
-#        │                            │
-#        ▼                            ▼
-# ┌─────────────────────┐      ┌─────────────────────┐
-# │  URL: /blog/feed/   │      │  URL: /blog/feed/   │
-# │                     │      │  <username>/        │
-# └─────────────────────┘      └─────────────────────┘
-#
-#
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                         LEGEND                                              │
-# ├─────────────────────────────────────────────────────────────────────────────┤
-# │ ───►   Inheritance (parent-child relationship)                              │
-# │ ───►   Data flow (what data is used by each class)                          │
-# │ ───►   URL access (where each feed is accessible)                           │
-# │                                                                             │
-# │ Feed Classes:                                                               │
-# │   - LatestPostsFeed: Global feed for all posts                              │
-# │   - UserPostsFeed: User-specific feed for a single user                     │
-# └─────────────────────────────────────────────────────────────────────────────┘

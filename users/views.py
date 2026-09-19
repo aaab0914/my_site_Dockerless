@@ -1,34 +1,19 @@
-# ========================================
-# IMPORTS
-# ========================================
 
 from django.shortcuts import render, redirect, get_object_or_404
-# render: Renders a template with context data
-# redirect: Redirects to a different URL
-# get_object_or_404: Returns an object or raises 404 if not found
 
 from django.contrib.auth import login, authenticate, logout
-# login: Logs a user in (creates session)
-# authenticate: Verifies user credentials
-# logout: Logs a user out (clears session)
 
 from django.contrib.auth.decorators import login_required
-# login_required: Decorator that redirects to login page if user is not authenticated
 
 from django.contrib import messages
-# messages: Framework for sending one-time notifications to users
 
 from django.contrib.auth.forms import UserChangeForm
-# UserChangeForm: Form for changing user information (username, email, etc.)
 
 from django.contrib.auth.models import User
-# User: Built-in Django user model
 
 from django.utils import timezone
-# timezone: Timezone-aware datetime utilities
 
 from django import forms
-# forms: Django's form handling framework (for customizing form fields)
 
 from .forms import (
     UserRegisterForm,  # Form for user registration
@@ -39,13 +24,8 @@ from .forms import (
 from blog.models import Post, Comment
 
 
-# Post: Blog post model
-# Comment: Blog comment model
 
 
-# ========================================
-# VIEW: REGISTER
-# ========================================
 
 def register(request):
     """
@@ -61,17 +41,13 @@ def register(request):
         HTTP response: Registration page or redirect to blog home
     """
     if request.method == 'POST':
-        # User submitted registration data
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            # Form validation passed - create the user
             user = form.save()
-            # Log the new user in immediately
             login(request, user)
             messages.success(request, 'Register Successful!')
             return redirect('blog:all_posts')
     else:
-        # First visit to the page - show empty form
         form = UserRegisterForm()
 
     return render(
@@ -81,9 +57,6 @@ def register(request):
     )
 
 
-# ========================================
-# VIEW: LOGIN
-# ========================================
 
 def login_view(request):
     """
@@ -99,16 +72,13 @@ def login_view(request):
         HTTP response: Login page or redirect to blog home
     """
     if request.method == 'POST':
-        # User submitted login credentials
         form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
-            # Credentials are valid - get the authenticated user
             user = form.get_user()
             login(request, user)
             messages.success(request, f'Welcome back, {user.username}!')
             return redirect('blog:all_posts_list')
     else:
-        # First visit to the page - show empty form
         form = UserLoginForm()
 
     return render(
@@ -118,9 +88,6 @@ def login_view(request):
     )
 
 
-# ========================================
-# VIEW: PROFILE EDIT
-# ========================================
 
 @login_required
 def profile_edit(request):
@@ -138,8 +105,6 @@ def profile_edit(request):
     Returns:
         HTTP response: Profile edit page
     """
-    # Ensure the user has a Profile object
-    # This is needed for users who registered before the Profile model was created
     if not hasattr(request.user, 'profile'):
         from .models import Profile
         Profile.objects.create(user=request.user)
@@ -147,10 +112,8 @@ def profile_edit(request):
     profile = request.user.profile
 
     if request.method == 'POST':
-        # Check if user is trying to change avatar
         if 'avatar' in request.FILES:
             if not profile.can_change_avatar():
-                # Avatar change is restricted (3-day cooldown)
                 remaining = profile.get_avatar_change_remaining_days()
                 messages.error(
                     request,
@@ -162,12 +125,10 @@ def profile_edit(request):
         form = UserProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             if 'avatar' in request.FILES:
-                # Update last_avatar_change timestamp when avatar is changed
                 profile.last_avatar_change = timezone.now()
                 form.save()
                 messages.success(request, 'Your profile picture has been updated.')
             else:
-                # Update other profile fields without changing avatar
                 form.save()
                 messages.success(request, 'Your profile picture has been updated.')
             return redirect('users:profile')
@@ -186,9 +147,6 @@ def profile_edit(request):
     )
 
 
-# ========================================
-# VIEW: LOGOUT
-# ========================================
 
 def logout_view(request):
     """
@@ -204,9 +162,6 @@ def logout_view(request):
     return render(request, 'users/logout.html')
 
 
-# ========================================
-# VIEW: PROFILE (VIEW PROFILE)
-# ========================================
 
 def profile(request, username=None):
     """
@@ -223,17 +178,12 @@ def profile(request, username=None):
         HTTP response: Profile page
     """
     if username:
-        # Show profile of a specific user
         user = get_object_or_404(User, username=username)
     else:
-        # Show profile of the currently logged-in user
         user = request.user
 
-    # Get all posts by this user, ordered newest first
     user_posts = Post.objects.filter(author=user).order_by('-publish')
 
-    # Get all comments by this user, ordered newest first
-    # Comments are linked to the user via the 'name' field (username)
     user_comments = Comment.objects.filter(name=user.username).order_by('-created')
 
     return render(
@@ -247,9 +197,6 @@ def profile(request, username=None):
     )
 
 
-# ========================================
-# VIEW: ACCOUNT DELETE
-# ========================================
 
 @login_required
 def account_delete(request):
@@ -267,7 +214,6 @@ def account_delete(request):
     """
     if request.method == 'POST':
         if request.POST.get('confirm_delete'):
-            # User confirmed deletion
             username = request.user.username
             request.user.delete()
             messages.success(
@@ -276,13 +222,9 @@ def account_delete(request):
             )
             return redirect('blog:all_posts_list')
 
-    # Show confirmation page (GET request)
     return render(request, 'users/account_delete.html')
 
 
-# ========================================
-# VIEW: USERNAME CHANGE
-# ========================================
 
 @login_required
 def username_change(request):
@@ -299,15 +241,12 @@ def username_change(request):
         HTTP response: Username change page
     """
     if request.method == 'POST':
-        # User submitted a new username
         new_username = request.POST.get('username', '').strip()
         if new_username:
-            # Check if username is already taken
             if User.objects.filter(username=new_username).exclude(id=request.user.id).exists():
                 messages.error(request, 'Username already exists.')
                 return redirect('users:username_change')
 
-            # Update username
             request.user.username = new_username
             request.user.save()
             messages.success(
@@ -316,16 +255,12 @@ def username_change(request):
             )
             return redirect('users:profile')
     else:
-        # Show the username change form
         form = UserChangeForm(instance=request.user)
-        # Hide all fields except 'username'
         for field in form.fields:
             if field != 'username':
                 form.fields[field].widget = forms.HiddenInput()
 
-    # If GET request or form errors, display the form
     form = UserChangeForm(instance=request.user)
-    # Hide all fields except 'username'
     for field in form.fields:
         if field != 'username':
             form.fields[field].widget = forms.HiddenInput()

@@ -1,45 +1,23 @@
-# =====================
-# IMPORTS
-# =====================
 
 from django.db import models
-# models: Django's ORM module for defining database models
-# Provides Model base class and field types (CharField, ForeignKey, etc.)
 
 from django.utils import timezone
-# timezone: Utility for handling timezone-aware datetime operations
-# Used for default publication time with timezone support
 
 from django.conf import settings
-# settings: Access to Django project configuration settings
-# Used to reference AUTH_USER_MODEL for ForeignKey to User
 
 from django.urls import reverse
-# reverse: Function to generate URLs by resolving view names and parameters
-# Used in get_absolute_url() to create permalinks for posts
 
 from taggit.managers import TaggableManager
-# TaggableManager: Manager for handling tags on models (from django-taggit)
-# Provides add(), remove(), and filtering capabilities for tags
 
 from django.utils.text import slugify
-# slugify: Function to convert a string into a URL-friendly slug
-# Example: "Hello World!" → "hello-world"
 
 from markdownx.models import MarkdownxField
-# MarkdownxField: Custom model field for Markdown content with live preview
-# Stores Markdown text and provides an admin widget for editing
 
 import markdown
 
 
-# markdown: Library for converting Markdown syntax to HTML
-# Used in get_markdown_body() to render Markdown content
 
 
-# =====================
-# CUSTOM MANAGER: PUBLISHED MANAGER
-# =====================
 
 class PublishedManager(models.Manager):
     """
@@ -65,9 +43,6 @@ class PublishedManager(models.Manager):
         )
 
 
-# =====================
-# POST MODEL
-# =====================
 
 class Post(models.Model):
     """
@@ -85,7 +60,6 @@ class Post(models.Model):
     - Auto-updated timestamps for created/updated
     """
 
-    # ----- STATUS ENUM (TextChoices) -----
     class Status(models.TextChoices):
         """
         Enum class defining possible post statuses.
@@ -99,83 +73,45 @@ class Post(models.Model):
         DRAFT = 'DF', 'Draft'  # First value: DB storage, Second: Human-readable label
         PUBLISHED = 'PB', 'Published'
 
-    # ----- BASIC FIELDS -----
 
     title = models.CharField(max_length=250)
     cover_image = models.ImageField(upload_to='posts/%Y/%m/%d/', blank=True, null=True)
-    # CharField: Stores the post title with maximum length of 250 characters
-    # Used in __str__ representation, URL slugs, and display headings
 
     slug = models.SlugField(
         max_length=250,
         unique_for_date='publish'
     )
-    # SlugField: URL-friendly version of the title (e.g., "my-blog-post")
-    # unique_for_date='publish': Slug only needs to be unique per publication date
-    # Allows same slug for posts published on different dates (good for same-titled posts)
 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='blog_posts'
     )
-    # ForeignKey: Links post to a user (author)
-    # settings.AUTH_USER_MODEL: Uses custom user model if defined, else defaults to User
-    # on_delete=CASCADE: Delete all posts when the author user is deleted
-    # related_name='blog_posts': Allows reverse access: user.blog_posts.all()
 
     body = MarkdownxField()
-    # MarkdownxField: Enhanced TextField with Markdown support
-    # Stores raw Markdown text, provides live preview in admin
-    # Used with get_markdown_body() method to render to HTML
 
-    # ----- DATE/TIME FIELDS -----
 
     publish = models.DateTimeField(default=timezone.now)
-    # DateTimeField: When the post should be considered published
-    # default=timezone.now: Auto-set to current time if not specified
-    # Can be manually set to future dates for scheduled publishing
-    # Used in unique_for_date constraint and URL date hierarchy
 
     created = models.DateTimeField(auto_now_add=True)
-    # DateTimeField: When the post was first created
-    # auto_now_add=True: Automatically set to current time on creation
-    # Never updates after initial creation (useful for auditing)
 
     updated = models.DateTimeField(auto_now=True)
-    # DateTimeField: When the post was last modified
-    # auto_now=True: Automatically updates on every save
-    # Useful for displaying "Last updated" timestamps
 
     status = models.CharField(
         max_length=10,
         choices=Status,
         default=Status.DRAFT
     )
-    # CharField: Stores post status as short code ('DF' or 'PB')
-    # choices: Limits values to those defined in Status enum
-    # default=Status.DRAFT: New posts start as drafts (not immediately visible)
 
-    # ----- TAGGING -----
 
     tags = TaggableManager()
-    # TaggableManager: Provides tagging capabilities via django-taggit
-    # Adds methods: .tags.add(), .tags.remove(), .tags.all()
-    # Creates separate tag tables and many-to-many relationship
-    # Allows: Post.objects.filter(tags__name='django')
 
-    # ----- MANAGERS -----
 
     objects = models.Manager()
-    # Default manager: Returns ALL posts (including drafts)
-    # Access via: Post.objects.all()
 
     published = PublishedManager()
 
-    # Custom manager: Returns ONLY published posts
-    # Access via: Post.published.all()
 
-    # ----- META CLASS -----
 
     class Meta:
         """
@@ -185,13 +121,9 @@ class Post(models.Model):
         indexes: Database indexes for performance optimization
         """
         ordering = ['-publish']
-        # Descending order by publish date (minus sign means newest first)
-        # Applied automatically when querying without explicit order_by()
 
         indexes = [
             models.Index(fields=['-publish']),
-            # Database index on publish field (descending) for faster date-based queries
-            # Improves performance for list pages that sort by publish date
         ]
 
         constraints = [
@@ -201,7 +133,6 @@ class Post(models.Model):
             )
         ]
 
-    # ----- MAGIC METHODS -----
 
     def __str__(self):
         """
@@ -216,7 +147,6 @@ class Post(models.Model):
         """
         return self.title
 
-    # ----- URL METHODS -----
 
     def get_absolute_url(self):
         """
@@ -243,7 +173,6 @@ class Post(models.Model):
         )
 
 
-    # ----- MODEL BEHAVIOR -----
 
     def save(self, *args, **kwargs):
         """
@@ -262,7 +191,6 @@ class Post(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
-    # ----- MARKDOWN RENDERING -----
 
     def get_markdown_body(self):
         """
@@ -282,9 +210,6 @@ class Post(models.Model):
         return markdown.markdown(self.body)
 
 
-# =====================
-# COMMENT MODEL
-# =====================
 
 class Comment(models.Model):
     """
@@ -300,56 +225,31 @@ class Comment(models.Model):
     - Ordered by creation date (oldest first by default)
     """
 
-    # ----- RELATIONSHIPS -----
 
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    # ForeignKey: Links comment to its parent post
-    # on_delete=CASCADE: Delete comment when its parent post is deleted
-    # related_name='comments': Allows reverse access: post.comments.all()
 
-    # ----- AUTHOR INFORMATION -----
 
     name = models.CharField(max_length=80)
-    # CharField: Commenter's name (required, max 80 characters)
-    # Displayed next to comment text
 
     email = models.EmailField()
-    # EmailField: Commenter's email address (for gravatar, moderation, replies)
-    # Validates email format automatically
-    # Not displayed publicly (typically)
 
-    # ----- COMMENT CONTENT -----
 
     body = models.TextField(max_length=200)
-    # TextField: The actual comment text (no length limit)
-    # Can contain HTML? Consider escaping for security
 
-    # ----- DATE/TIME FIELDS -----
     image = models.ImageField(upload_to='comments/%Y/%m/%d/', blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
-    # DateTimeField: When comment was first posted
-    # auto_now_add=True: Set on creation, never updates
-    # Used for sorting comments chronologically
 
     updated = models.DateTimeField(auto_now=True)
-    # DateTimeField: When comment was last edited (if editing is allowed)
-    # auto_now=True: Updates on every save
-    # Optional feature (editing not implemented in basic version)
 
-    # ----- MODERATION -----
 
     active = models.BooleanField(default=True)
 
-    # BooleanField: Whether comment is approved and visible
-    # default=True: New comments are active by default
-    # Set to False for moderation queue, spam filtering, or manual approval
 
-    # ----- META CLASS -----
 
     class Meta:
         """
@@ -359,16 +259,11 @@ class Comment(models.Model):
         indexes: Database index on created field for faster date-based queries
         """
         ordering = ['created']
-        # Ascending order by creation date (oldest first)
-        # Natural order for discussion threads
 
         indexes = [
             models.Index(fields=['created']),
-            # Database index on created field for faster sorting/filtering
-            # Improves performance when ordering by creation date
         ]
 
-    # ----- MAGIC METHODS -----
 
     def __str__(self):
         """
@@ -384,103 +279,3 @@ class Comment(models.Model):
         :return: Descriptive string with commenter name and associated post
         """
         return f"Comment by {self.name} on {self.post}"
-
-# =====================
-# RELATIONSHIP DIAGRAM
-# =====================
-#
-# ┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-# │      User       │         │      Post       │         │     Comment     │
-# │  (auth_user)    │         │   (blog_post)   │         │  (blog_comment) │
-# ├─────────────────┤         ├─────────────────┤         ├─────────────────┤
-# │ id (PK)         │◄───────│ author_id (FK)   │         │ post_id (FK)    │◄──┐
-# │ username        │         │ title           │         │ name            │   │
-# │ email           │         │ slug            │         │ email           │   │
-# │ ...             │         │ body (Markdown) │         │ body            │   │
-# └─────────────────┘         │ publish         │         │ created         │   │
-#                             │ created         │         │ updated         │   │
-#                             │ updated         │         │ active          │   │
-#                             │ status          │         └─────────────────┘   │
-#                             │ tags (M2M) ──┐  │                                │
-#                             └──────────────┼──┘                                │
-#                                            │                                   │
-#                                    ┌───────▼───────┐                           │
-#                                    │     Tag      │                           │
-#                                    │ (taggit_tag) │                           │
-#                                    ├───────────────┤                           │
-#                                    │ id (PK)       │                           │
-#                                    │ name          │                           │
-#                                    │ slug          │                           │
-#                                    └───────────────┘                           │
-#                                                                                │
-# ┌─────────────────────────────────────────────────────────────────────────────┘
-# │
-# └─ One-to-Many: One Post has many Comments
-#    Many-to-Many: One Post has many Tags, one Tag belongs to many Posts
-#    Many-to-One: One User has many Posts (one author per post)
-#
-
-# =====================
-# QUERY EXAMPLES
-# =====================
-#
-# 1. Get all published posts (using custom manager):
-#    posts = Post.published.all()
-#
-# 2. Get all posts by a specific author:
-#    posts = Post.objects.filter(author__username='john')
-#
-# 3. Get posts with a specific tag:
-#    posts = Post.published.filter(tags__name='django')
-#
-# 4. Get active comments for a post:
-#    comments = post.comments.filter(active=True)
-#
-# 5. Get all posts from the last 7 days:
-#    from datetime import timedelta
-#    week_ago = timezone.now() - timedelta(days=7)
-#    recent = Post.published.filter(publish__gte=week_ago)
-#
-# 6. Count comments per post:
-#    from django.db.models import Count
-#    posts_with_comment_count = Post.published.annotate(
-#        total_comments=Count('comments')
-#    )
-#
-# 7. Get posts using the default manager (including drafts):
-#    all_posts = Post.objects.all()
-#
-# 8. Get posts using published manager (excluding drafts):
-#    published_posts = Post.published.all()
-
-# =====================
-# TROUBLESHOOTING
-# =====================
-#
-# 1. MarkdownxField Import Error
-#    → Ensure markdownx is installed: pip install django-markdownx
-#    → Add 'markdownx' to INSTALLED_APPS in settings.py
-#
-# 2. TaggableManager Import Error
-#    → Ensure django-taggit is installed: pip install django-taggit
-#    → Add 'taggit' to INSTALLED_APPS in settings.py
-#
-# 3. Slug not auto-generated
-#    → Check that save() method override is correct
-#    → Verify slugify is imported from django.utils.text
-#
-# 4. unique_for_date constraint error
-#    → Publish field must be a date/datetime field
-#    → Identical slugs on same date will cause IntegrityError
-#
-# 5. Reverse accessor clashes
-#    → related_name must be unique across models
-#    → Using 'blog_posts' and 'comments' avoids conflicts
-#
-# 6. PublishedManager returning no results
-#    → Check status field has value 'PB' for published posts
-#    → Verify Post.Status.PUBLISHED value (should be 'PB')
-#
-# 7. Markdown not rendering
-#    → Use |safe filter in template: {{ post.get_markdown_body|safe }}
-#    → Verify markdown library is installed: pip install markdown

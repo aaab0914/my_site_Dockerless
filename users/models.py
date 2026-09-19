@@ -1,32 +1,19 @@
-# users/models.py
-# ========================================
-# Imports
-# ========================================
 
 from django.db import models
-# models: Django's ORM module for defining database models
 
 from django.contrib.auth.models import User
-# User: The built-in user model
 
 from django.db.models.signals import post_save
-# post_save: Signal that is sent after a model instance is saved
 
 from django.dispatch import receiver
-# receiver: Decorator for connecting a signal to a function
 
 from django.utils import timezone
-# timezone: Django's timezone utilities for handling timezone-aware datetime operations
 
 from django.core.exceptions import ValidationError
 
 
-# ValidationError: Exception raised when data validation fails
 
 
-# ========================================
-# Models
-# ========================================
 
 class Profile(models.Model):
     """
@@ -149,9 +136,6 @@ class UserPreference(models.Model):
         return f'{self.user.username} Preferences'
 
 
-# ========================================
-# Signals
-# ========================================
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
