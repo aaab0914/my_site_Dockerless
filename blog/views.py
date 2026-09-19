@@ -1,69 +1,37 @@
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-from django.http import Http404
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-from django.views.generic import ListView
 from django.contrib import messages
-
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import send_mail
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, Q
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-
-from django.db.models import Count
-from django.views.generic.detail import DetailView
-
-from taggit.models import Tag
-
-from .models import Post, Comment
-
-from .forms import EmailPostForm, CommentForm, SearchForm, PostCreateForm
-
-
-from django.db.models import Q
-
 from django.contrib.auth.decorators import login_required
-
-from django.utils.text import slugify
 from django.urls import reverse_lazy
 from django.views.generic.edit import DeleteView
+from taggit.models import Tag
 
-
-
-
-
-
-
+from .forms import CommentForm, EmailPostForm, PostCreateForm, SearchForm
+from .models import Comment, Post
 def post_share(request, post_id):
-    """
-    View function for sharing a post via email.
-
-    This view:
-    - Retrieves a published post by its ID
-    - Displays a form for entering recipient email and comments (GET request)
-    - Processes the form and sends an email (POST request)
-
-    Note: The actual email sending logic is omitted (commented out).
-
-    :param request: HTTP request object
-    :param post_id: Primary key of the post to share
-    :return: Rendered share form or redirect after successful email
-    """
-
-    post = get_object_or_404(
-        Post,
-        id=post_id,
-        status=Post.Status.PUBLISHED
-    )
+    post = get_object_or_404(Post, id=post_id, status=Post.Status.PUBLISHED)
 
     if request.method == 'POST':
         form = EmailPostForm(request.POST)
 
         if form.is_valid():
             cd = form.cleaned_data
-
+            post_url = request.build_absolute_uri(post.get_absolute_url())
+            send_mail(
+                subject=f"{cd['name']} recommends {post.title}",
+                message=f"{cd['comment']}\n\nRead the post: {post_url}",
+                from_email=cd['email'],
+                recipient_list=[cd['to']],
+            )
+            messages.success(request, 'The post was shared successfully.')
+            return redirect('blog:post_detail', year=post.publish.year,
+                            month=post.publish.month, day=post.publish.day,
+                            post_slug=post.slug)
 
     else:
         form = EmailPostForm()
@@ -76,24 +44,6 @@ def post_share(request, post_id):
 
 
 def post_list(request, tag_slug=None):
-    """
-    View function for displaying a list of posts with optional tag filtering.
-
-    Features:
-    - Shows only published posts
-    - Supports filtering by tag slug (optional URL parameter)
-    - Paginates results (10 posts per page)
-    - Handles invalid page numbers gracefully
-
-    URL patterns:
-        /blog/              - Shows all posts
-        /blog/tag/django/   - Shows posts tagged with 'django'
-
-    :param request: HTTP request object
-    :param tag_slug: Optional slug of the tag to filter by (from URL)
-    :return: Rendered list template with posts and optional tag
-    """
-
     post_list = Post.published.all()
 
     tag = None
@@ -122,32 +72,13 @@ def post_list(request, tag_slug=None):
 
 
 def post_detail(request, year, month, day, post_slug):
-    """
-    View function for displaying a single post detail page.
-
-    This view:
-    - Retrieves a published post by slug and publication date
-    - Displays active comments for the post
-    - Provides a form for adding new comments
-    - Shows similar posts based on tag overlap and title similarity
-
-    URL pattern: /blog/2024/01/15/my-post-slug/
-
-    :param request: HTTP request object
-    :param year: Publication year (e.g., 2024)
-    :param month: Publication month (e.g., 1 for January)
-    :param day: Publication day (e.g., 15)
-    :param post_slug: URL-friendly slug of the post (e.g., 'my-post-slug')
-    :return: Rendered detail template with post, comments, form, and similar posts
-    """
-
     post = get_object_or_404(
         Post,
-        status=Post.Status.PUBLISHED,  # Only published posts
-        slug=post_slug,  # Match the slug
-        publish__year=year,  # Match publication year
-        publish__month=month,  # Match publication month
-        publish__day=day  # Match publication day
+        status=Post.Status.PUBLISHED,
+        slug=post_slug,
+        publish__year=year,
+        publish__month=month,
+        publish__day=day,
     )
 
     comments = post.comments.filter(active=True)
@@ -156,29 +87,24 @@ def post_detail(request, year, month, day, post_slug):
 
     post_tags_ids = post.tags.values_list('id', flat=True)
 
-    tag_based_posts = Post.published.filter(
-        tags__in=post_tags_ids
-    ).exclude(id=post.id)  # Exclude the current post itself
+    tag_based_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
 
     title_based_posts = Post.published.none()
 
-    if tag_based_posts.count() < 4:
-        title_based_posts = Post.published.annotate(
-            similarity=TrigramSimilarity('title', post.title)
-        ).filter(
-            similarity__gt=0.1  # Only posts with >10% title similarity
-        ).exclude(
-            id=post.id
-        ).order_by('-similarity')[:4 - tag_based_posts.count()]  # Take only what's needed
+    tag_count = tag_based_posts.count()
+    if tag_count < 4:
+        title_based_posts = Post.published.filter(
+            title__icontains=post.title
+        ).exclude(id=post.id).order_by('-publish')[:4 - tag_count]
 
     similar_posts = (tag_based_posts | title_based_posts).distinct()
 
     similar_posts = similar_posts.annotate(
-        same_tags=Count('tags')  # Count how many tags are shared
+        same_tags=Count('tags')
     ).order_by(
-        '-same_tags',  # Posts with more shared tags come first
-        '-publish'  # Then by newest publication date
-    )[:4]  # Limit to maximum 4 similar posts
+        '-same_tags',
+        '-publish'
+    )[:4]
 
     return render(
         request,

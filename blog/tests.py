@@ -7,21 +7,11 @@ from django.contrib.auth.models import User
 
 from django.utils import timezone
 
-from django.contrib.admin.sites import AdminSite
-
-from django.contrib.messages import get_messages
-
-from .models import Post, Comment
-
-from .forms import CommentForm, SearchForm
-
-from .admin import PostAdmin
+from .models import Post
 
 from .feeds import LatestPostsFeed
 
 from taggit.models import Tag
-
-import os
 
 import subprocess
 
@@ -82,6 +72,7 @@ class RSSFeedTest(TestCase):
             email='test@example.com',
             password='testpass123'
         )
+        self.client.login(username='testuser', password='testpass123')
         for i in range(5):
             Post.objects.create(
                 title=f'RSS Test Post {i}',
@@ -294,21 +285,3 @@ class DockerTest(TestCase):
         )
         self.assertIn('my_site_web', result.stdout)
         self.assertIn('my_site_db', result.stdout)
-
-class RSSFeedTest(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
-        self.client.login(username='testuser', password='testpass123')
-        for i in range(5):
-            Post.objects.create(
-                title=f'RSS Test Post {i}',
-                slug=f'rss-test-post-{i}',
-                body=f'This is RSS test post {i} body.',
-                author=self.user,
-                status=Post.Status.PUBLISHED,
-                publish=timezone.now()
-            )
