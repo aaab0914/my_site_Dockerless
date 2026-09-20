@@ -11,9 +11,9 @@ class LoginRequiredMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.allowed_paths = [
-            '/blog/',
-            '/users/login/',
-            '/users/register/',
+            "/blog/",
+            "/users/login/",
+            "/users/register/",
         ]
 
     def __call__(self, request):
@@ -23,4 +23,4 @@ class LoginRequiredMiddleware:
         if request.path in self.allowed_paths:
             return self.get_response(request)
 
-        return redirect(reverse('users:login'))
+        return redirect(reverse("users:login"))

@@ -1,19 +1,20 @@
 from rest_framework import serializers
-from .models import Post, Comment
 from taggit.models import Tag
+
+from .models import Comment, Post
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'slug']
+        fields = ["id", "name", "slug"]
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'name', 'email', 'body', 'created', 'active']
-        read_only_fields = ['created']
+        fields = ["id", "name", "email", "body", "created", "active"]
+        read_only_fields = ["created"]
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -24,26 +25,31 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            'id', 'title', 'slug', 'body', 'author',
-            'publish', 'created', 'updated', 'status',
-            'tags', 'comments', 'cover_image'
+            "id",
+            "title",
+            "slug",
+            "body",
+            "author",
+            "publish",
+            "created",
+            "updated",
+            "status",
+            "tags",
+            "comments",
+            "cover_image",
         ]
-        read_only_fields = ['created', 'updated', 'publish']
+        read_only_fields = ["created", "updated", "publish"]
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
-    tags = serializers.ListField(
-        child=serializers.CharField(),
-        write_only=True,
-        required=False
-    )
+    tags = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     class Meta:
         model = Post
-        fields = ['title', 'slug', 'body', 'status', 'tags']
+        fields = ["title", "slug", "body", "status", "tags"]
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags', [])
+        tags = validated_data.pop("tags", [])
         post = Post.objects.create(**validated_data)
         if tags:
             post.tags.add(*tags)

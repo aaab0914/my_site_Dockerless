@@ -1,15 +1,9 @@
-
-
+import markdown
 from django import template
-
 from django.db.models import Count
-
 from django.utils.safestring import mark_safe
 
 from ..models import Post
-
-import markdown
-
 
 register = template.Library()
 
@@ -33,7 +27,7 @@ def total_posts():
     return Post.published.count()
 
 
-@register.inclusion_tag('blog/post/latest_posts.html')
+@register.inclusion_tag("blog/post/latest_posts.html")
 def show_latest_posts(count=5):
     """
     Inclusion tag that renders a list of the most recent posts.
@@ -61,9 +55,9 @@ def show_latest_posts(count=5):
     :param count: Number of posts to display (default: 5)
     :return: Dictionary containing the latest_posts variable for the template
     """
-    latest_posts = Post.published.order_by('-publish')[:count]
+    latest_posts = Post.published.order_by("-publish")[:count]
 
-    return {'latest_posts': latest_posts}
+    return {"latest_posts": latest_posts}
 
 
 @register.simple_tag
@@ -90,16 +84,20 @@ def get_most_commented_posts(count=5):
     :param count: Number of posts to return (default: 5)
     :return: QuerySet of the most commented published posts
     """
-    return Post.published.annotate(
-        total_comments=Count('comments')  # Count comments via related_name='comments'
-    ).filter(
-        total_comments__gt=0  # Only posts with at least one comment
-    ).order_by(
-        '-total_comments'  # Descending order (highest first)
-    )[:count]  # Limit to 'count' number of results
+    return (
+        Post.published.annotate(
+            total_comments=Count("comments")  # Count comments via related_name='comments'
+        )
+        .filter(
+            total_comments__gt=0  # Only posts with at least one comment
+        )
+        .order_by(
+            "-total_comments"  # Descending order (highest first)
+        )[:count]
+    )  # Limit to 'count' number of results
 
 
-@register.filter(name='markdown')
+@register.filter(name="markdown")
 def markdown_format(text):
     """
     Template filter that converts Markdown text to HTML.
@@ -127,6 +125,7 @@ def markdown_format(text):
     :return: HTML string marked as safe for rendering
     """
     return mark_safe(markdown.markdown(text))
+
 
 @register.simple_tag
 def user_posts_count(user):

@@ -1,5 +1,7 @@
 from django import forms
+
 from .models import Comment, Post
+
 
 class EmailPostForm(forms.Form):
     name = forms.CharField(max_length=25)
@@ -7,25 +9,28 @@ class EmailPostForm(forms.Form):
     to = forms.EmailField()
     comment = forms.CharField(required=False, widget=forms.Textarea)
 
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['body', 'image']
+        fields = ["body", "image"]
         widgets = {
-            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            "body": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "image": forms.FileInput(attrs={"class": "form-control"}),
         }
+
 
 class SearchForm(forms.Form):
     query = forms.CharField()
 
+
 class PostCreateForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'body', 'tags', 'cover_image']
+        fields = ["title", "body", "tags", "cover_image"]
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
-            'tags': forms.TextInput(attrs={'class': 'form-control'}),
-            'cover_image': forms.FileInput(attrs={'class': 'form-control'}),
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "body": forms.Textarea(attrs={"class": "form-control", "rows": 10}),
+            "tags": forms.TextInput(attrs={"class": "form-control"}),
+            "cover_image": forms.FileInput(attrs={"class": "form-control"}),
         }

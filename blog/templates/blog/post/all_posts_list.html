@@ -1,51 +1,50 @@
 {% extends "blog/base.html" %}
 {% load blog_tags %}
-
 {% block title %}My_Site's Blog{% endblock %}
-
 {% block content %}
     <h1>My_Site's Blog</h1>
-{% if tag %}
+    {% if tag %}
         <h2>Posts tagged with "{{ tag.name }}"</h2>
     {% endif %}
-<div class="post-list">
-{% for post in posts %}
-            <div class="post-item" style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-{% if post.cover_image %}
+    <div class="post-list">
+        {% for post in posts %}
+            <div class="post-item"
+                 style="margin-bottom: 30px;
+                        border-bottom: 1px solid #eee;
+                        padding-bottom: 20px">
+                {% if post.cover_image %}
                     <div style="margin-bottom: 10px;">
-<img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
-                             style="max-width: 100%; height: auto; border-radius: 8px;">
+                        <img src="{{ post.cover_image.url }}"
+                             alt="{{ post.title }}"
+                             style="max-width: 100%;
+                                    height: auto;
+                                    border-radius: 8px">
                     </div>
                 {% endif %}
-<h2>
+                <h2>
                     <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
                 </h2>
-<p class="tags">
+                <p class="tags">
                     Tags:
                     {% for tag in post.tags.all %}
                         {% if tag.slug %}
-<a href="{% url "blog:post_list_by_tag" tag.slug %}" class="tag-button">
-                                {{ tag.name }}
-                            </a>
+                            <a href="{% url "blog:post_list_by_tag" tag.slug %}" class="tag-button">{{ tag.name }}</a>
                         {% else %}
-{{ tag.name }}
+                            {{ tag.name }}
                         {% endif %}
-{% if not forloop.last %}, {% endif %}
+                        {% if not forloop.last %},{% endif %}
                     {% endfor %}
                 </p>
-<p class="date">
+                <p class="date">
                     Published {{ post.publish }} by
-<a href="{% url 'users:profile_by_username' post.author.username %}" class="author-button">
-                        {{ post.author }}
-                    </a>
+                    <a href="{% url 'users:profile_by_username' post.author.username %}"
+                       class="author-button">{{ post.author }}</a>
                 </p>
-<p>
-                    {{ post.body|markdown|safe|truncatewords_html:30 }}
-                </p>
+                <p>{{ post.body|markdown|safe|truncatewords_html:30 }}</p>
             </div>
         {% endfor %}
     </div>
-<div style="margin-top: 20px; text-align: center; clear: both;">
+    <div style="margin-top: 20px; text-align: center; clear: both;">
         {% include "blog/pagination.html" with page=posts %}
     </div>
 {% endblock %}

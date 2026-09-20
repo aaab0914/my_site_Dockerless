@@ -3,6 +3,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.simple_tag
 def is_superuser(user):
     """
@@ -10,4 +11,4 @@ def is_superuser(user):
     """
     if user.is_authenticated and user.is_superuser:
         return '<span style="color: #cc0000; font-weight: bold; font-size: 0.8em;">Superuser</span>'
-    return ''
+    return ""
