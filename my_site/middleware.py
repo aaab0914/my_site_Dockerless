@@ -20,7 +20,9 @@ class LoginRequiredMiddleware:
         if request.user.is_authenticated:
             return self.get_response(request)
 
-        if request.path in self.allowed_paths:
+        if request.path in self.allowed_paths or request.path.startswith(
+            ("/admin/", "/static/", "/media/")
+        ):
             return self.get_response(request)
 
         return redirect(reverse("users:login"))
