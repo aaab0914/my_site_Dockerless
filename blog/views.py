@@ -17,8 +17,10 @@ from .models import Comment, Post
 
 def post_share(request, post_id):
     post = get_object_or_404(Post, id=post_id, status=Post.Status.PUBLISHED)
+
     if request.method == "POST":
         form = EmailPostForm(request.POST)
+
         if form.is_valid():
             cd = form.cleaned_data
             post_url = request.build_absolute_uri(post.get_absolute_url())
@@ -39,6 +41,7 @@ def post_share(request, post_id):
             )
     else:
         form = EmailPostForm()
+
     return render(request, "blog/post/share.html", {"post": post, "form": form})
 
 
@@ -93,6 +96,7 @@ def post_detail(request, year, month, day, post_slug):
     similar_posts = similar_posts.annotate(same_tags=Count("tags")).order_by(
         "-same_tags", "-publish"
     )[:4]
+
     return render(
         request,
         "blog/post/post_detail.html",
@@ -109,13 +113,16 @@ def post_search(request):
     form = SearchForm()
     query = None
     results = []
+
     if "query" in request.GET:
         form = SearchForm(request.GET)
+
         if form.is_valid():
             query = form.cleaned_data["query"]
             results = Post.published.filter(
                 Q(title__icontains=query) | Q(body__icontains=query)
             ).order_by("-publish")
+
     return render(
         request,
         "blog/post/search_post.html",
@@ -127,15 +134,18 @@ def post_search(request):
 def post_create(request):
     if request.method == "POST":
         form = PostCreateForm(request.POST, request.FILES)
+
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.status = Post.Status.PUBLISHED
             post.save()
             form.save_m2m()
+
             return redirect(post.get_absolute_url())
     else:
         form = PostCreateForm()
+
     return render(request, "blog/post/create_post.html", {"form": form})
 
 
@@ -163,11 +173,13 @@ def add_comment(request, post_id):
     post = get_object_or_404(Post, id=post_id, status=Post.Status.PUBLISHED)
     comment = None
     form = CommentForm(request.POST, request.FILES)
+
     if form.is_valid():
         comment = form.save(commit=False)
         comment.post = post
         comment.name = request.user.username
         comment.save()
+
     return render(
         request,
         "blog/comment/add_comment_success.html",
@@ -178,8 +190,10 @@ def add_comment(request, post_id):
 @login_required
 def edit_comment(request, post_slug, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
+
     if comment.post.slug != post_slug:
         return redirect("blog:all_posts_list")
+
     if comment.name != request.user.username and not request.user.is_superuser:
         return redirect(
             "blog:post_detail",
@@ -188,10 +202,13 @@ def edit_comment(request, post_slug, comment_id):
             day=comment.post.publish.day,
             post_slug=comment.post.slug,
         )
+
     if request.method == "POST":
         form = CommentForm(data=request.POST, instance=comment)
+
         if form.is_valid():
             form.save()
+
             return redirect(
                 "blog:post_detail",
                 year=comment.post.publish.year,
@@ -211,8 +228,10 @@ def edit_comment(request, post_slug, comment_id):
 @login_required
 def comment_delete(request, post_slug, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
+
     if request.user.username != comment.name and not request.user.is_superuser:
         messages.error(request, "You are not allowed to delete this comment.")
+
         return redirect(
             "blog:post_detail",
             year=comment.post.publish.year,
@@ -220,6 +239,7 @@ def comment_delete(request, post_slug, comment_id):
             day=comment.post.publish.day,
             post_slug=comment.post.slug,
         )
+
     if request.method == "POST":
         post = comment.post
         comment.delete()
@@ -231,4 +251,5 @@ def comment_delete(request, post_slug, comment_id):
             day=post.publish.day,
             post_slug=post.slug,
         )
+
     return render(request, "blog/comment/delete_comment.html", {"comment": comment})

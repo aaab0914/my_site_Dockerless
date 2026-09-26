@@ -15,26 +15,32 @@ from .forms import UserLoginForm, UserProfileForm, UserRegisterForm
 def register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
+
         if form.is_valid():
             user = form.save()
             login(request, user)
             messages.success(request, "Register Successful!")
+
             return redirect("blog:all_posts")
     else:
         form = UserRegisterForm()
+
     return render(request, "users/register.html", {"form": form})
 
 
 def login_view(request):
     if request.method == "POST":
         form = UserLoginForm(request, data=request.POST)
+
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             messages.success(request, f"Welcome back, {user.username}!")
+
             return redirect("blog:all_posts_list")
     else:
         form = UserLoginForm()
+
     return render(request, "users/login.html", {"form": form})
 
 

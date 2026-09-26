@@ -1,7 +1,11 @@
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-exclude = ["*/migrations/*.py"]
+exclude = ["NotInProject/**", ".pwsh/**", ".bash/**", "**/migrations/**"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.djlint]
+profile = "django"
+exclude = '(^|/)(NotInProject|\.pwsh|\.bash)/|(^|/)migrations/'

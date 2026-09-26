@@ -9,6 +9,9 @@ class EmailPostForm(forms.Form):
     to = forms.EmailField()
     comment = forms.CharField(required=False, widget=forms.Textarea)
 
+    # def clean_name(self):
+    #     name = self.cleaned_data['name']
+
 
 class CommentForm(forms.ModelForm):
     class Meta:

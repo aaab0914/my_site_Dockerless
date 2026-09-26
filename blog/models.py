@@ -1,5 +1,11 @@
+import re
+
 import markdown
+from better_profanity import profanity
 from django.conf import settings
+from django.core.exceptions import ValidationError
+
+# from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -7,6 +13,33 @@ from django.utils.text import slugify
 from markdownx.models import MarkdownxField
 from taggit.managers import TaggableManager
 
+profanity.load_censor_words()
+
+def validate_no_profanity(value):
+    """ Validator to check for profanity. """
+    if profanity.contains_profanity(value):
+        raise ValidationError(
+            'Content contains inappropriate or offensive language.',
+            code='profanity',
+        )
+
+def validate_stripped_length(value):
+    if len(value.strip()) < 5:
+        raise ValidationError(
+            'Content must be at least 5 characters after trimming.',
+            code='min_length',
+        )
+
+def validate_meaningful_content(value):
+    """ Reject content that is only numbers or only symbols. """
+    stripped = value.strip()
+    if stripped.isdigit():
+        raise ValidationError(
+            'Content cannot be only numbers.',
+            code='Only_numbers',
+        )
+    if not re.search(r'[a-zA-Z\u4e00-\u9fff]', stripped):
+        raise
 
 class PublishedManager(models.Manager):
     def get_queryset(self):
