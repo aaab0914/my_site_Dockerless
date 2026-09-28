@@ -1,29 +1,30 @@
-import re
+import logging
 
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.db.models.signals import post_save, pre_delete, pre_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from .models import Post
 
+logger = logging.getLogger(__name__)
 
-@receiver(post_save, sender=Post)
+
+@receiver(post_save, sender=Post, dispatch_uid="blog.post_saved_handler")
 def post_saved_handler(sender, instance, created, **kwargs):
     if created:
-        print(f"New post '{instance.title}' created by {instance.author.username}")
+        logger.info(
+            "New post '%s' created by %s",
+            instance.title,
+            instance.author.username,
+        )
     else:
-        print(f"Post '{instance.title}' updated. Status: {instance.status}")
+        logger.info(
+            "Post '%s' updated. Status: %s",
+            instance.title,
+            instance.status,
+        )
 
 
-@receiver(pre_delete, sender=Post)
+@receiver(pre_delete, sender=Post, dispatch_uid="blog.post_deleted_handler")
 def post_deleted_handler(sender, instance, **kwargs):
-    print(f"Post '{instance.title}' is being deleted by {instance.author.username}")
-
-
-@receiver(pre_save, sender=User)
-def validate_user_chars(sender, instance, **kwargs):
-    chinese_pattern = re.compile(r"[\u4e00-\u9fff]")
-
-    if chinese_pattern.search(instance.username):
-        raise ValidationError("Username cannot contain Chinese characters.")
+    author_name = getattr(instance.author, "username", "unknown")
+    logger.info("Post '%s' is being deleted by %s", instance.title, author_name)

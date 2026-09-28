@@ -1,7 +1,7 @@
 {% load blog_tags %}
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>
             {% block title %}{% endblock %}
@@ -26,7 +26,7 @@
                     <a href="{% url 'users:logout' %}">Logout</a>
                 </p>
                 <p>
-                    <a href="{% url 'users:account_delete' %}" style="color: #cc0000;">Delete Account</a>
+                    <a href="{% url 'users:account_delete' %}" class="delete-account-link">Delete Account</a>
                 </p>
                 <div class="search-button-container">
                     <a href="{% url 'blog:post_search' %}" class="search-button-link">🔍 Search Posts</a>

@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
-from markdownx import urls as markdownx_urls
 
 from blog.sitemaps import PostSitemap
 
@@ -21,7 +20,6 @@ urlpatterns = [
         {"sitemaps": sitemaps},
         name="django.contrib.sitemaps.views.sitemaps",
     ),
-    path("markdownx/", include(markdownx_urls)),
     path("users/", include("users.urls", namespace="users")),
 ]
 

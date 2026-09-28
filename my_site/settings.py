@@ -12,7 +12,11 @@ SECRET_KEY = config(
 
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,testserver", cast=Csv())
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="localhost,127.0.0.1,testserver",
+    cast=Csv(),
+)
 
 
 SITE_ID = 1
@@ -34,7 +38,6 @@ INSTALLED_APPS = [
     "images.apps.ImagesConfig",
     "users.apps.UsersConfig",
     "taggit",
-    "markdownx",
 ]
 
 REST_FRAMEWORK = {
@@ -114,7 +117,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Points to the static folder in the project root
+    BASE_DIR / "static",
 ]
 
 

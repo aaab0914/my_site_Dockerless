@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -9,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic.edit import DeleteView
+
 from taggit.models import Tag
 
 from .forms import CommentForm, EmailPostForm, PostCreateForm, SearchForm
@@ -27,8 +29,9 @@ def post_share(request, post_id):
             send_mail(
                 subject=f"{cd['name']} recommends {post.title}",
                 message=f"{cd['comment']}\n\nRead the post: {post_url}",
-                from_email=cd["email"],
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[cd["to"]],
+                reply_to=[cd["email"]],
             )
             messages.success(request, "The post was shared successfully.")
 
@@ -46,14 +49,14 @@ def post_share(request, post_id):
 
 
 def post_list(request, tag_slug=None):
-    post_list = Post.published.all()
+    posts_qs = Post.published.all()
 
     tag = None
     if tag_slug:
         tag = get_object_or_404(Tag, slug=tag_slug)
-        post_list = post_list.filter(tags__in=[tag])
+        posts_qs = posts_qs.filter(tags__in=[tag])
 
-    paginator = Paginator(post_list, 10)
+    paginator = Paginator(posts_qs, 10)
     page_number = request.GET.get("page", 1)
     try:
         posts = paginator.page(page_number)
@@ -65,7 +68,7 @@ def post_list(request, tag_slug=None):
     return render(
         request,
         "blog/post/all_posts_list.html",
-        {"posts": posts, "tag": tag if tag_slug else None},
+        {"posts": posts, "tag": tag},
     )
 
 
@@ -80,22 +83,23 @@ def post_detail(request, year, month, day, post_slug):
     )
     comments = post.comments.filter(active=True)
     form = CommentForm()
+
     post_tags_ids = post.tags.values_list("id", flat=True)
     tag_based_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
-    title_based_posts = Post.published.none()
-
     tag_count = tag_based_posts.count()
-    if tag_count < 4:
-        title_based_posts = (
-            Post.published.filter(title__icontains=post.title)
-            .exclude(id=post.id)
-            .order_by("-publish")[: 4 - tag_count]
-        )
 
-    similar_posts = (tag_based_posts | title_based_posts).distinct()
-    similar_posts = similar_posts.annotate(same_tags=Count("tags")).order_by(
-        "-same_tags", "-publish"
-    )[:4]
+    title_based_posts = Post.published.none()
+    if tag_count < 4:
+        title_based_posts = Post.published.filter(
+            title__icontains=post.title
+        ).exclude(id=post.id)
+
+    similar_posts = (
+        (tag_based_posts | title_based_posts)
+        .distinct()
+        .annotate(same_tags=Count("tags"))
+        .order_by("-same_tags", "-publish")[:4]
+    )
 
     return render(
         request,
@@ -160,11 +164,11 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = "post"
     pk_url_kwarg = "pk"
 
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.author != request.user and not request.user.is_superuser:
-            raise PermissionDenied("You are not allowed to delete this post.")
-        return super().dispatch(request, *args, **kwargs)
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_superuser:
+            return qs
+        return qs.filter(author=self.request.user)
 
 
 @login_required
@@ -187,6 +191,16 @@ def add_comment(request, post_id):
     )
 
 
+def _redirect_to_post(post):
+    return redirect(
+        "blog:post_detail",
+        year=post.publish.year,
+        month=post.publish.month,
+        day=post.publish.day,
+        post_slug=post.slug,
+    )
+
+
 @login_required
 def edit_comment(request, post_slug, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
@@ -195,29 +209,21 @@ def edit_comment(request, post_slug, comment_id):
         return redirect("blog:all_posts_list")
 
     if comment.name != request.user.username and not request.user.is_superuser:
-        return redirect(
-            "blog:post_detail",
-            year=comment.post.publish.year,
-            month=comment.post.publish.month,
-            day=comment.post.publish.day,
-            post_slug=comment.post.slug,
-        )
+        return _redirect_to_post(comment.post)
 
     if request.method == "POST":
-        form = CommentForm(data=request.POST, instance=comment)
+        form = CommentForm(
+            data=request.POST,
+            files=request.FILES,
+            instance=comment,
+        )
 
         if form.is_valid():
             form.save()
-
-            return redirect(
-                "blog:post_detail",
-                year=comment.post.publish.year,
-                month=comment.post.publish.month,
-                day=comment.post.publish.day,
-                post_slug=comment.post.slug,
-            )
+            return _redirect_to_post(comment.post)
     else:
         form = CommentForm(instance=comment)
+
     return render(
         request,
         "blog/comment/edit_comment.html",
@@ -229,27 +235,17 @@ def edit_comment(request, post_slug, comment_id):
 def comment_delete(request, post_slug, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
 
-    if request.user.username != comment.name and not request.user.is_superuser:
-        messages.error(request, "You are not allowed to delete this comment.")
+    if comment.post.slug != post_slug:
+        return redirect("blog:all_posts_list")
 
-        return redirect(
-            "blog:post_detail",
-            year=comment.post.publish.year,
-            month=comment.post.publish.month,
-            day=comment.post.publish.day,
-            post_slug=comment.post.slug,
-        )
+    if comment.name != request.user.username and not request.user.is_superuser:
+        messages.error(request, "You are not allowed to delete this comment.")
+        return _redirect_to_post(comment.post)
 
     if request.method == "POST":
         post = comment.post
         comment.delete()
         messages.success(request, "Comment deleted successfully.")
-        return redirect(
-            "blog:post_detail",
-            year=post.publish.year,
-            month=post.publish.month,
-            day=post.publish.day,
-            post_slug=post.slug,
-        )
+        return _redirect_to_post(post)
 
     return render(request, "blog/comment/delete_comment.html", {"comment": comment})

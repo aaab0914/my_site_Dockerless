@@ -1,47 +1,87 @@
 import re
 
-import markdown
 from better_profanity import profanity
 from django.conf import settings
 from django.core.exceptions import ValidationError
-
-# from django.contrib.auth.models import User
+from django.core.validators import MaxLengthValidator, RegexValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from markdownx.models import MarkdownxField
 from taggit.managers import TaggableManager
 
 profanity.load_censor_words()
 
+
 def validate_no_profanity(value):
-    """ Validator to check for profanity. """
+    """Validator to check for profanity."""
     if profanity.contains_profanity(value):
         raise ValidationError(
-            'Content contains inappropriate or offensive language.',
-            code='profanity',
+            "Content contains inappropriate or offensive language.",
+            code="profanity",
         )
+
 
 def validate_stripped_length(value):
+    """Reject content shorter than 5 characters after trimming."""
     if len(value.strip()) < 5:
         raise ValidationError(
-            'Content must be at least 5 characters after trimming.',
-            code='min_length',
+            "Content must be at least 5 characters after trimming.",
+            code="min_length",
         )
 
+
 def validate_meaningful_content(value):
-    """ Reject content that is only numbers or only symbols. """
+    """Reject content that is only numbers or only symbols."""
     stripped = value.strip()
     if stripped.isdigit():
         raise ValidationError(
-            'Content cannot be only numbers.',
-            code='Only_numbers',
+            "Content cannot be only numbers.",
+            code="only_numbers",
         )
-    if not re.search(r'[a-zA-Z\u4e00-\u9fff]', stripped):
-        raise
+    if not re.search(r"[a-zA-Z\u4e00-\u9fff]", stripped):
+        raise ValidationError(
+            "Content must contain at least one letter.",
+            code="no_letters",
+        )
+
+
+text_validator = RegexValidator(
+    regex=r"^[a-zA-Z0-9\u4e00-\u9fff\s.,!?'\"():/\n\r-]+$",
+    message="Only letters, numbers, spaces, and basic punctuation are allowed.",
+)
+
+
+def validate_no_excessive_whitespace(value):
+    """Reject content with excessive whitespace."""
+    if re.search(r"\s{5,}", value):
+        raise ValidationError(
+            "Content contains excessive whitespace.",
+            code="excessive_whitespace",
+        )
+
+
+def validate_no_repeated_chars(value):
+    """Reject content with too many repeated characters."""
+    if re.search(r"(.)\1{4,}", value):
+        raise ValidationError(
+            "Content contains too many repeated characters.",
+            code="repeated_chars",
+        )
+
+
+def validate_no_html(value):
+    """Reject content containing HTML tags."""
+    if re.search(r"<[^>]+>", value):
+        raise ValidationError(
+            "HTML tags are not allowed.",
+            code="html_not_allowed",
+        )
+
 
 class PublishedManager(models.Manager):
+    """Manager that returns only published posts."""
+
     def get_queryset(self):
         return super().get_queryset().filter(status=Post.Status.PUBLISHED)
 
@@ -51,13 +91,32 @@ class Post(models.Model):
         DRAFT = "DF", "Draft"
         PUBLISHED = "PB", "Published"
 
-    title = models.CharField(max_length=250)
+    title = models.CharField(
+        max_length=200,
+        validators=[
+            MaxLengthValidator(200, message="Title must not exceed 200 characters."),
+            validate_stripped_length,
+            validate_meaningful_content,
+            text_validator,
+            validate_no_profanity,
+        ],
+    )
     cover_image = models.ImageField(upload_to="posts/%Y/%m/%d/", blank=True, null=True)
     slug = models.SlugField(max_length=250, unique_for_date="publish")
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="blog_posts"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="blog_posts",
     )
-    body = MarkdownxField()
+    body = models.TextField(
+        validators=[
+            MaxLengthValidator(5000, message="Body must not exceed 5000 characters."),
+            validate_stripped_length,
+            validate_meaningful_content,
+            text_validator,
+            validate_no_profanity,
+        ],
+    )
     publish = models.DateTimeField(default=timezone.now)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -70,7 +129,10 @@ class Post(models.Model):
         ordering = ["-publish"]
         indexes = [models.Index(fields=["-publish"])]
         constraints = [
-            models.UniqueConstraint(fields=["slug", "publish"], name="unique_slug_per_date")
+            models.UniqueConstraint(
+                fields=["slug", "publish"],
+                name="unique_slug_per_date",
+            )
         ]
 
     def __str__(self):
@@ -85,18 +147,22 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
-        self.clean()
         super().save(*args, **kwargs)
-
-    def get_markdown_body(self):
-        return markdown.markdown(self.body)
 
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     name = models.CharField(max_length=80)
     email = models.EmailField()
-    body = models.TextField(max_length=200)
+    body = models.TextField(
+        validators=[
+            MaxLengthValidator(5000, message="Body must not exceed 5000 characters."),
+            validate_stripped_length,
+            validate_meaningful_content,
+            text_validator,
+            validate_no_profanity,
+        ],
+    )
     image = models.ImageField(upload_to="comments/%Y/%m/%d/", blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
