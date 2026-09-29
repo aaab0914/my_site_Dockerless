@@ -2,9 +2,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -15,6 +14,20 @@ from taggit.models import Tag
 
 from .forms import CommentForm, EmailPostForm, PostCreateForm, SearchForm
 from .models import Comment, Post
+
+
+def _redirect_to_post(post):
+    return redirect(
+        "blog:post_detail",
+        year=post.publish.year,
+        month=post.publish.month,
+        day=post.publish.day,
+        post_slug=post.slug,
+    )
+
+
+def _display_name(user):
+    return getattr(user, "display_name", "") or user.username
 
 
 def post_share(request, post_id):
@@ -35,13 +48,7 @@ def post_share(request, post_id):
             )
             messages.success(request, "The post was shared successfully.")
 
-            return redirect(
-                "blog:post_detail",
-                year=post.publish.year,
-                month=post.publish.month,
-                day=post.publish.day,
-                post_slug=post.slug,
-            )
+            return _redirect_to_post(post)
     else:
         form = EmailPostForm()
 
@@ -58,12 +65,7 @@ def post_list(request, tag_slug=None):
 
     paginator = Paginator(posts_qs, 10)
     page_number = request.GET.get("page", 1)
-    try:
-        posts = paginator.page(page_number)
-    except PageNotAnInteger:
-        posts = paginator.page(1)
-    except EmptyPage:
-        posts = paginator.page(paginator.num_pages)
+    posts = paginator.get_page(page_number)
 
     return render(
         request,
@@ -97,7 +99,9 @@ def post_detail(request, year, month, day, post_slug):
     similar_posts = (
         (tag_based_posts | title_based_posts)
         .distinct()
-        .annotate(same_tags=Count("tags"))
+        .annotate(
+            same_tags=Count("tags", filter=Q(tags__in=post_tags_ids))
+        )
         .order_by("-same_tags", "-publish")[:4]
     )
 
@@ -114,23 +118,28 @@ def post_detail(request, year, month, day, post_slug):
 
 
 def post_search(request):
-    form = SearchForm()
+    form = SearchForm(request.GET or None)
     query = None
-    results = []
+    results = Post.published.none()
 
-    if "query" in request.GET:
-        form = SearchForm(request.GET)
+    if form.is_valid():
+        query = form.cleaned_data["query"]
+        results = Post.published.filter(
+            Q(title__icontains=query) | Q(body__icontains=query)
+        ).order_by("-publish")
 
-        if form.is_valid():
-            query = form.cleaned_data["query"]
-            results = Post.published.filter(
-                Q(title__icontains=query) | Q(body__icontains=query)
-            ).order_by("-publish")
+    paginator = Paginator(results, 10)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
 
     return render(
         request,
         "blog/post/search_post.html",
-        {"form": form, "query": query, "results": results},
+        {
+            "form": form,
+            "query": query,
+            "results": page_obj,
+        },
     )
 
 
@@ -138,14 +147,12 @@ def post_search(request):
 def post_create(request):
     if request.method == "POST":
         form = PostCreateForm(request.POST, request.FILES)
-
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
-            post.status = Post.Status.PUBLISHED
             post.save()
             form.save_m2m()
-
+            messages.success(request, "Post created successfully.")
             return redirect(post.get_absolute_url())
     else:
         form = PostCreateForm()
@@ -153,6 +160,7 @@ def post_create(request):
     return render(request, "blog/post/create_post.html", {"form": form})
 
 
+@login_required
 def post_delete_success(request):
     return render(request, "blog/post/post_delete_success.html")
 
@@ -175,29 +183,21 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
 @require_POST
 def add_comment(request, post_id):
     post = get_object_or_404(Post, id=post_id, status=Post.Status.PUBLISHED)
-    comment = None
     form = CommentForm(request.POST, request.FILES)
 
     if form.is_valid():
         comment = form.save(commit=False)
         comment.post = post
-        comment.name = request.user.username
+        comment.user = request.user
+        comment.name = _display_name(request.user)
         comment.save()
+        messages.success(request, "Comment added successfully.")
+        return _redirect_to_post(post)
 
     return render(
         request,
-        "blog/comment/add_comment_success.html",
-        {"post": post, "form": form, "comment": comment},
-    )
-
-
-def _redirect_to_post(post):
-    return redirect(
-        "blog:post_detail",
-        year=post.publish.year,
-        month=post.publish.month,
-        day=post.publish.day,
-        post_slug=post.slug,
+        "blog/comment/add_comment.html",
+        {"post": post, "form": form},
     )
 
 
@@ -208,7 +208,7 @@ def edit_comment(request, post_slug, comment_id):
     if comment.post.slug != post_slug:
         return redirect("blog:all_posts_list")
 
-    if comment.name != request.user.username and not request.user.is_superuser:
+    if comment.user != request.user and not request.user.is_superuser:
         return _redirect_to_post(comment.post)
 
     if request.method == "POST":
@@ -217,9 +217,9 @@ def edit_comment(request, post_slug, comment_id):
             files=request.FILES,
             instance=comment,
         )
-
         if form.is_valid():
             form.save()
+            messages.success(request, "Comment updated successfully.")
             return _redirect_to_post(comment.post)
     else:
         form = CommentForm(instance=comment)
@@ -238,7 +238,7 @@ def comment_delete(request, post_slug, comment_id):
     if comment.post.slug != post_slug:
         return redirect("blog:all_posts_list")
 
-    if comment.name != request.user.username and not request.user.is_superuser:
+    if comment.user != request.user and not request.user.is_superuser:
         messages.error(request, "You are not allowed to delete this comment.")
         return _redirect_to_post(comment.post)
 

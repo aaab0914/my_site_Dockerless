@@ -11,11 +11,7 @@ class PostAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     raw_id_fields = ["author"]
     date_hierarchy = "publish"
-    ordering = ["status", "publish"]
-    show_facets = admin.ShowFacets.ALWAYS
-
-    class Media:
-        css = {"all": ("admin/css/markdownx_admin.css",)}
+    ordering = ["-publish"]
 
 
 @admin.register(Comment)

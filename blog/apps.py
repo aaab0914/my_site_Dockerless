@@ -1,5 +1,8 @@
+import logging
+
 from django.apps import AppConfig
-from django.db import connection
+
+logger = logging.getLogger(__name__)
 
 
 class BlogConfig(AppConfig):
@@ -7,16 +10,5 @@ class BlogConfig(AppConfig):
     name = "blog"
 
     def ready(self):
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-            print(f"[OK] {self.name} database connection is healthy")
-        except Exception as e:
-            print(f"[WARNING] {self.name} database connection failed: {e}")
-
-        try:
-            from . import signals  # noqa: F401
-
-            print(f"[OK] {self.name} signals registered")
-        except ImportError:
-            print(f"[INFO] {self.name} has no signals.py; skipping signal registration")
+        import blog.signals  # noqa: F401
+        logger.info("blog signals registered")

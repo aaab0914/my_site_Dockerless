@@ -1,33 +1,37 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.syndication.views import Feed
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import truncatewords
-from django.urls import reverse_lazy
-from django.utils.html import strip_tags
+from django.urls import reverse
 
 from .models import Post
 
+User = get_user_model()
 
-class LatestPostsFeed(Feed):
-    title = "My Blog"
-    link = reverse_lazy("blog:all_posts_list")
-    description = "New Posts of My Blog."
 
-    def items(self):
-        return Post.published.all()[:5]
-
+class BasePostFeed(Feed):
     def item_title(self, item):
         return item.title
 
     def item_description(self, item):
-        plain_text = strip_tags(item.get_markdown_body())
-        return truncatewords(plain_text, 30) + "..."
+        return truncatewords(item.body, 30) + "..."
 
     def item_pubdate(self, item):
         return item.publish
 
 
-class UserPostsFeed(Feed):
+class LatestPostsFeed(BasePostFeed):
+    title = "My Blog"
+    description = "New Posts of My Blog."
+
+    def link(self):
+        return reverse("blog:all_posts_list")
+
+    def items(self):
+        return Post.published.all()[:5]
+
+
+class UserPostsFeed(BasePostFeed):
     def get_object(self, request, username):
         return get_object_or_404(User, username=username)
 
@@ -35,20 +39,10 @@ class UserPostsFeed(Feed):
         return f"{obj.username}'s Posts"
 
     def link(self, obj):
-        return f"/blog/user/{obj.username}/"
+        return reverse("blog:user_posts", args=[obj.username])
 
     def description(self, obj):
         return f"Latest posts from {obj.username}"
 
     def items(self, obj):
         return Post.published.filter(author=obj).order_by("-publish")[:5]
-
-    def item_title(self, item):
-        return item.title
-
-    def item_description(self, item):
-        plain_text = strip_tags(item.get_markdown_body())
-        return truncatewords(plain_text, 30) + "..."
-
-    def item_pubdate(self, item):
-        return item.publish
