@@ -8,17 +8,12 @@
     {% endif %}
     <div class="post-list">
         {% for post in posts %}
-            <div class="post-item"
-                 style="margin-bottom: 30px;
-                        border-bottom: 1px solid #eee;
-                        padding-bottom: 20px">
+            <div class="post-item">
                 {% if post.cover_image %}
-                    <div style="margin-bottom: 10px;">
+                    <div class="post-image-wrapper">
                         <img src="{{ post.cover_image.url }}"
                              alt="{{ post.title }}"
-                             style="max-width: 100%;
-                                    height: auto;
-                                    border-radius: 8px">
+                             class="post-image">
                     </div>
                 {% endif %}
                 <h2>
@@ -44,7 +39,5 @@
             </div>
         {% endfor %}
     </div>
-    <div style="margin-top: 20px; text-align: center; clear: both;">
-        {% include "blog/pagination.html" with page=posts %}
-    </div>
+    <div class="post-pagination-wrapper">{% include "blog/pagination.html" with page=posts %}</div>
 {% endblock %}

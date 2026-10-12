@@ -172,3 +172,48 @@ input[type=submit] {
 .tag-button:hover {
     background-color: #0088cc;
 }
+
+.post-item {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.post-image-wrapper {
+    margin-bottom: 10px;
+}
+
+.post-detail-image-wrapper {
+    margin-bottom: 20px;
+}
+
+.post-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.comment-image-file {
+    max-width: 200px;
+    border-radius: 4px;
+}
+
+.delete-link {
+    margin-left: 10px;
+    color: #cc0000;
+}
+
+.blog-muted {
+    color: #888;
+}
+
+.blog-login-prompt {
+    margin-top: 20px;
+    font-style: italic;
+}
+
+.post-pagination-wrapper {
+    clear: both;
+    margin-top: 20px;
+    text-align: center;
+}

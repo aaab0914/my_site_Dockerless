@@ -2,36 +2,26 @@
 {% load blog_tags %}
 {% block title %}{{ post.title }}{% endblock %}
 {% block content %}
-
     <h1>{{ post.title }}</h1>
-
     {% if post.cover_image %}
-        <div style="margin-bottom: 20px;">
+        <div class="post-detail-image-wrapper">
             <img src="{{ post.cover_image.url }}"
                  alt="{{ post.title }}"
-                 style="max-width: 100%;
-                        height: auto;
-                        border-radius: 8px">
+                 class="post-image">
         </div>
     {% endif %}
-
     <p class="date">Published {{ post.publish }} by {{ post.author }}</p>
-
     <div class="post-body">{{ post.get_markdown_body|safe }}</div>
     <div class="post-delete-container">
         {% if user.is_authenticated and user == post.author or user.is_superuser %}
             <a href="{% url 'blog:post_delete' post.pk %}" class="delete-btn">Delete Post</a>
         {% endif %}
     </div>
-
     {% if user.is_authenticated %}
         {% with comments.count as total_comments %}
-
             <h2>{{ total_comments }} Comment{{ total_comments|pluralize }}</h2>
-
         {% endwith %}
         {% for comment in comments %}
-
             <div class="comment">
                 <p class="info">
                     Comment {{ forloop.counter }} by {{ comment.name }}
@@ -40,30 +30,24 @@
                         <a href="{% url 'blog:edit_comment' post.slug comment.id %}"
                            class="edit-link">Edit</a>
                         <a href="{% url 'blog:comment_delete' post.slug comment.id %}"
-                           class="delete-link"
-                           style="color: #cc0000;
-                                  margin-left: 10px">Delete</a>
+                           class="delete-link">Delete</a>
                     {% endif %}
                 </p>
-
                 {% if comment.image %}
                     <div class="comment-image">
                         <img src="{{ comment.image.url }}"
                              alt="Comment image"
-                             style="max-width: 200px;
-                                    border-radius: 4px">
+                             class="comment-image-file">
                     </div>
                 {% endif %}
                 {{ comment.body|linebreaks }}
             </div>
         {% endfor %}
-
     {% else %}
-        <p style="color: #888; font-style: italic; margin-top: 20px;">
+        <p class="blog-muted blog-login-prompt">
             Please <a href="{% url 'users:login' %}">login</a> to view comments.
         </p>
     {% endif %}
-
     <h2>Similar Posts</h2>
     {% for post in similar_posts %}
         <p>
@@ -73,5 +57,4 @@
         <p>There are no Similar Posts yet.</p>
     {% endfor %}
     {% include "blog/comment/add_comment.html" %}
-
 {% endblock %}
