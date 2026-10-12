@@ -1,6 +1,7 @@
 import re
 
 from better_profanity import profanity
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator, RegexValidator
@@ -8,6 +9,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
+
 from taggit.managers import TaggableManager
 
 profanity.load_censor_words()

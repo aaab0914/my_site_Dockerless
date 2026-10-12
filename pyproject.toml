@@ -9,3 +9,14 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.djlint]
 profile = "django"
 exclude = '(^|/)(NotInProject|\.pwsh|\.bash)/|(^|/)migrations/'
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+exclude = "(^|/)(NotInProject|\\.pwsh|\\.bash|migrations)/"
+
+[tool.django-stubs]
+django_settings_module = "my_site.settings"

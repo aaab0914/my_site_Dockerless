@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -39,13 +39,13 @@ def post_share(request, post_id):
         if form.is_valid():
             cd = form.cleaned_data
             post_url = request.build_absolute_uri(post.get_absolute_url())
-            send_mail(
+            EmailMessage(
                 subject=f"{cd['name']} recommends {post.title}",
-                message=f"{cd['comment']}\n\nRead the post: {post_url}",
+                body=f"{cd['comment']}\n\nRead the post: {post_url}",
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[cd["to"]],
+                to=[cd["to"]],
                 reply_to=[cd["email"]],
-            )
+            ).send()
             messages.success(request, "The post was shared successfully.")
 
             return _redirect_to_post(post)
@@ -100,15 +100,17 @@ def post_detail(request, year, month, day, post_slug):
         .order_by("-same_tags", "-publish")[:4]
     )
 
+    context = {
+        'post': post,
+        'comments': comments,
+        'form': form,
+        'similar_posts': similar_posts,
+    }
+
     return render(
         request,
         "blog/post/post_detail.html",
-        {
-            "post": post,
-            "comments": comments,
-            "form": form,
-            "similar_posts": similar_posts,
-        },
+        context,
     )
 
 
@@ -127,14 +129,16 @@ def post_search(request):
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
-    return render(
-        request,
-        "blog/post/search_post.html",
-        {
+    context = {
             "form": form,
             "query": query,
             "results": page_obj,
-        },
+        }
+
+    return render(
+        request,
+        "blog/post/search_post.html",
+        context,
     )
 
 
@@ -152,7 +156,9 @@ def post_create(request):
     else:
         form = PostCreateForm()
 
-    return render(request, "blog/post/create_post.html", {"form": form})
+    context = {'form': form}
+
+    return render(request, "blog/post/create_post.html", context)
 
 
 @login_required
@@ -189,10 +195,12 @@ def add_comment(request, post_id):
         messages.success(request, "Comment added successfully.")
         return _redirect_to_post(post)
 
+    context = {"post": post, "form": form}
+
     return render(
         request,
         "blog/comment/add_comment.html",
-        {"post": post, "form": form},
+        context,
     )
 
 
@@ -219,10 +227,12 @@ def edit_comment(request, post_slug, comment_id):
     else:
         form = CommentForm(instance=comment)
 
+    context = {"form": form, "comment": comment, "post": comment.post}
+
     return render(
         request,
         "blog/comment/edit_comment.html",
-        {"form": form, "comment": comment, "post": comment.post},
+        context,
     )
 
 
@@ -243,4 +253,6 @@ def comment_delete(request, post_slug, comment_id):
         messages.success(request, "Comment deleted successfully.")
         return _redirect_to_post(post)
 
-    return render(request, "blog/comment/delete_comment.html", {"comment": comment})
+    context = {'comment': comment}
+
+    return render(request, "blog/comment/delete_comment.html", context)

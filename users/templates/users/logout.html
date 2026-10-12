@@ -1,13 +1,17 @@
 {% extends "blog/base.html" %}
 {% load static %}
+
 {% block title %}Logout{% endblock %}
 {% block content %}
+
     <link rel="stylesheet" href="{% static 'users/css/users.css' %}">
     <div class="users-form-container logout-container">
+
         <h2 class="users-form-title">You have been logged out</h2>
         <p>Thank you for visiting. Come back soon!</p>
         <p>
             <a class="users-button" href="{% url 'blog:all_posts_list' %}">Return to Home</a>
         </p>
+
     </div>
 {% endblock %}

@@ -114,7 +114,7 @@ def username_change(request):
             request.user.save()
             messages.success(request, f'User "{new_username}" has been changed.')
             return redirect("users:profile")
-    form = UserChangeForm(instance=request.user)
+    form: UserChangeForm = UserChangeForm(instance=request.user)
     for field in form.fields:
         if field != "username":
             form.fields[field].widget = forms.HiddenInput()

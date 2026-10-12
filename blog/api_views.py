@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, generics, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -43,6 +44,8 @@ class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         if self.request.method in ["PUT", "PATCH", "DELETE"]:
+            if not self.request.user.is_authenticated:
+                return Post.objects.none()
             return Post.objects.filter(author=self.request.user)
         return Post.published.all()
 
@@ -69,6 +72,11 @@ class CommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Comment.objects.filter(active=True)
 
 
+@extend_schema(
+    responses=TagSerializer(many=True),
+    operation_id="tag_list",
+    description="Return all tags ordered by name.",
+)
 @api_view(["GET"])
 def tag_list_api(request):
     from taggit.models import Tag
@@ -78,6 +86,11 @@ def tag_list_api(request):
     return Response(serializer.data)
 
 
+@extend_schema(
+    responses=TagSerializer,
+    operation_id="tag_detail",
+    description="Return a tag by slug.",
+)
 @api_view(["GET"])
 def tag_detail_api(request, slug):
     from taggit.models import Tag

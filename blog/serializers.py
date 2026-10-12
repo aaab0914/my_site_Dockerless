@@ -19,7 +19,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
-    author = serializers.StringRelatedField(read_only=True)
+    author: serializers.StringRelatedField = serializers.StringRelatedField(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:

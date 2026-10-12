@@ -1,18 +1,24 @@
 {% extends "blog/base.html" %}
 {% load static %}
+
 {% block title %} Log in {% endblock title %}
 {% block content %}
+
     <link rel="stylesheet" href="{% static 'users/css/users.css' %}">
     <div class="users-form-container">
+
         <h2 class="users-form-title">Log in</h2>
+
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
             <button class="users-form-button" type="submit">Login</button>
         </form>
+
         <p class="users-form-note">
             Don't have an account?
             <a href="{% url 'users:register' %}">Register Here</a>
         </p>
+
     </div>
 {% endblock content %}
