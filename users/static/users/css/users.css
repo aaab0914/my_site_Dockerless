@@ -1,0 +1,157 @@
+.users-page-container {
+    width: min(100% - 2rem, 600px);
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.users-form-container {
+    width: min(100% - 2rem, 400px);
+    margin: 40px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.users-form-container--wide {
+    max-width: 500px;
+}
+
+.users-form-title {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.users-form-button {
+    width: 100%;
+    padding: 10px;
+    border: 0;
+    border-radius: 4px;
+    background: #00abff;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.users-form-note {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.users-message-list {
+    margin: 10px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.users-message {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 4px;
+    background: #d4edda;
+    color: #155724;
+}
+
+.users-message.error {
+    background: #ffcccc;
+    color: #cc0000;
+}
+
+.users-help-text {
+    margin-top: 10px;
+    color: #888;
+    font-size: 0.9em;
+}
+
+.users-help-text--success {
+    color: #28a745;
+}
+
+.users-error {
+    color: #cc0033;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.profile-avatar,
+.profile-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    margin-right: 20px;
+    border-radius: 50%;
+}
+
+.profile-avatar {
+    object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0e0e0;
+}
+
+.profile-avatar-placeholder span {
+    color: #999;
+    font-size: 36px;
+}
+
+.profile-date,
+.profile-muted {
+    color: #888;
+}
+
+.profile-date {
+    font-size: 0.9em;
+}
+
+.profile-comment {
+    color: #555;
+}
+
+.profile-actions {
+    margin-top: 20px;
+}
+
+.profile-actions--secondary {
+    margin-top: 10px;
+}
+
+.users-button {
+    display: inline-block;
+    margin-right: 10px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: #00abff;
+    color: white;
+    text-decoration: none;
+}
+
+.users-button:last-child {
+    margin-right: 0;
+}
+
+.users-button--block {
+    width: 100%;
+    margin-right: 0;
+    border: 0;
+    cursor: pointer;
+}
+
+.logout-container {
+    text-align: center;
+}
+
+.logout-container .users-button {
+    margin-top: 20px;
+}
+
+.account-delete-container {
+    width: min(100% - 2rem, 600px);
+    margin: 40px auto;
+}

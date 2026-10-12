@@ -1,28 +1,19 @@
 {% extends "blog/base.html" %}
+{% load static %}
 {% load blog_tags %}
 {% block title %}{{ user.username }}'s Profile{% endblock %}
 {% block content %}
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <link rel="stylesheet" href="{% static 'users/css/users.css' %}">
+    <div class="users-page-container">
         <h1>{{ user.username }}'s Profile</h1>
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <div class="profile-header">
             {% if user.profile and user.profile.avatar %}
                 <img src="{{ user.profile.avatar.url }}"
                      alt="{{ user.username }}'s avatar"
-                     style="width: 100px;
-                            height: 100px;
-                            border-radius: 50%;
-                            object-fit: cover;
-                            margin-right: 20px">
+                     class="profile-avatar">
             {% else %}
-                <div style="width: 100px;
-                            height: 100px;
-                            border-radius: 50%;
-                            background: #e0e0e0;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            margin-right: 20px">
-                    <span style="font-size: 36px; color: #999;">?</span>
+                <div class="profile-avatar-placeholder">
+                    <span>?</span>
                 </div>
             {% endif %}
             <div>
@@ -45,12 +36,12 @@
                 {% for post in posts %}
                     <li>
                         <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                        <span style="color: #888; font-size: 0.9em;">({{ post.publish|date:"F j, Y" }})</span>
+                        <span class="profile-date">({{ post.publish|date:"F j, Y" }})</span>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p style="color: #888;">
+            <p class="profile-muted">
                 {% if user == request.user %}
                     You haven't written any posts yet.
                 {% else %}
@@ -71,13 +62,13 @@
                     <li>
                         <strong>On:</strong> <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a>
                         <br>
-                        <span style="color: #555;">{{ comment.body|truncatewords:20 }}</span>
-                        <span style="color: #888; font-size: 0.9em;">({{ comment.created|date:"F j, Y" }})</span>
+                        <span class="profile-comment">{{ comment.body|truncatewords:20 }}</span>
+                        <span class="profile-date">({{ comment.created|date:"F j, Y" }})</span>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p style="color: #888;">
+            <p class="profile-muted">
                 {% if user == request.user %}
                     You haven't written any comments yet.
                 {% else %}
@@ -85,30 +76,13 @@
                 {% endif %}
             </p>
         {% endif %}
-        <div style="margin-top: 20px;">
-            <a href="{% url 'blog:user_feed' user.username %}"
-               style="display: inline-block;
-                      padding: 8px 16px;
-                      background: #00abff;
-                      color: white;
-                      text-decoration: none;
-                      border-radius: 4px">📡 RSS Feed</a>
+        <div class="profile-actions">
+            <a href="{% url 'blog:user_feed' user.username %}" class="users-button">📡 RSS Feed</a>
         </div>
         {% if user == request.user %}
-            <div style="margin-top: 10px;">
-                <a href="{% url 'users:profile_edit' %}"
-                   style="background: #00abff;
-                          color: white;
-                          padding: 8px 16px;
-                          text-decoration: none;
-                          border-radius: 4px;
-                          margin-right: 10px">Edit Profile</a>
-                <a href="{% url 'users:username_change' %}"
-                   style="background: #00abff;
-                          color: white;
-                          padding: 8px 16px;
-                          text-decoration: none;
-                          border-radius: 4px">Change Username</a>
+            <div class="profile-actions--secondary">
+                <a href="{% url 'users:profile_edit' %}" class="users-button">Edit Profile</a>
+                <a href="{% url 'users:username_change' %}" class="users-button">Change Username</a>
             </div>
         {% endif %}
     </div>
