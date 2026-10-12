@@ -5,19 +5,11 @@ from decouple import Csv, config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = config(
-    "SECRET_KEY",
-    default="django-insecure-esgyg9h0dut!3$t%g0#b#-@s@b&1&-h$83d0#^1sl1@i6ldx3q",
-)
+SECRET_KEY = config("SECRET_KEY")
 
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = config("DEBUG", cast=bool)
 
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="localhost,127.0.0.1,testserver",
-    cast=Csv(),
-)
-
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
 SITE_ID = 1
 
@@ -30,13 +22,16 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.sitemaps",
+
     "django_extensions",
     "rest_framework",
     "django_filters",
     "rest_framework.authtoken",
+
     "blog.apps.BlogConfig",
     "images.apps.ImagesConfig",
     "users.apps.UsersConfig",
+
     "taggit",
 ]
 

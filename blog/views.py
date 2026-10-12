@@ -87,21 +87,16 @@ def post_detail(request, year, month, day, post_slug):
     form = CommentForm()
 
     post_tags_ids = post.tags.values_list("id", flat=True)
-    tag_based_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
-    tag_count = tag_based_posts.count()
-
-    title_based_posts = Post.published.none()
-    if tag_count < 4:
-        title_based_posts = Post.published.filter(
-            title__icontains=post.title
-        ).exclude(id=post.id)
 
     similar_posts = (
-        (tag_based_posts | title_based_posts)
-        .distinct()
+        Post.published.filter(
+            Q(tags__in=post_tags_ids) | Q(title__icontains=post.title)
+        )
+        .exclude(id=post.id)
         .annotate(
             same_tags=Count("tags", filter=Q(tags__in=post_tags_ids))
         )
+        .distinct()
         .order_by("-same_tags", "-publish")[:4]
     )
 
